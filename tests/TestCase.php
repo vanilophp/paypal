@@ -6,8 +6,8 @@ namespace Vanilo\Paypal\Tests;
 
 use Konekt\Concord\ConcordServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Vanilo\Paypal\Providers\ModuleServiceProvider as PaypalModule;
 use Vanilo\Payment\Providers\ModuleServiceProvider as PaymentModule;
+use Vanilo\Paypal\Providers\ModuleServiceProvider as PaypalModule;
 
 abstract class TestCase extends Orchestra
 {

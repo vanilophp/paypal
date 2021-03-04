@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Factories;
 
-use Vanilo\Paypal\Messages\PaypalPaymentRequest;
 use Vanilo\Payment\Contracts\Payment;
+use Vanilo\Paypal\Messages\PaypalPaymentRequest;
 
 final class RequestFactory
 {

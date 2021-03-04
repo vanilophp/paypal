@@ -14,7 +14,6 @@ namespace Vanilo\Paypal\Factories;
  *
  */
 
-use Illuminate\Http\Request;
 use Vanilo\Paypal\Messages\PaypalPaymentResponse;
 
 final class ResponseFactory

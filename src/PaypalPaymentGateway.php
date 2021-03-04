@@ -16,12 +16,12 @@ namespace Vanilo\Paypal;
 
 use Illuminate\Http\Request;
 use Vanilo\Contracts\Address;
-use Vanilo\Paypal\Factories\RequestFactory;
-use Vanilo\Paypal\Factories\ResponseFactory;
 use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Payment\Contracts\PaymentGateway;
 use Vanilo\Payment\Contracts\PaymentRequest;
 use Vanilo\Payment\Contracts\PaymentResponse;
+use Vanilo\Paypal\Factories\RequestFactory;
+use Vanilo\Paypal\Factories\ResponseFactory;
 
 class PaypalPaymentGateway implements PaymentGateway
 {

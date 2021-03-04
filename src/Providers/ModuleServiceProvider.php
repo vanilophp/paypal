@@ -15,8 +15,8 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Providers;
 
 use Konekt\Concord\BaseModuleServiceProvider;
-use Vanilo\Paypal\PaypalPaymentGateway;
 use Vanilo\Payment\PaymentGateways;
+use Vanilo\Paypal\PaypalPaymentGateway;
 
 class ModuleServiceProvider extends BaseModuleServiceProvider
 {
