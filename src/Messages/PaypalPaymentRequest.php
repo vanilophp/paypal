@@ -31,13 +31,13 @@ class PaypalPaymentRequest implements PaymentRequest
 
     public function getHtmlSnippet(array $options = []): ?string
     {
-        $api        = new PaypalApi($this->clientId, $this->secret, $this->isSandbox);
+        $api = new PaypalApi($this->clientId, $this->secret, $this->isSandbox);
         $approveUrl = $api->createOrder($this->currency, $this->amount, $this->returnUrl, $this->cancelUrl);
 
         return View::make(
             $this->view,
             [
-                'url'          => $approveUrl,
+                'url' => $approveUrl,
                 'autoRedirect' => $options['autoRedirect'] ?? false
             ]
         )->render();

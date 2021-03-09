@@ -25,16 +25,16 @@ class PaypalApi
         $orderCreateRequest = new OrdersCreateRequest();
         $orderCreateRequest->prefer('return=representation');
         $orderCreateRequest->body = [
-            'intent'              => 'CAPTURE',
+            'intent' => 'CAPTURE',
             'application_context' => [
                 'return_url' => $returnUrl,
                 'cancel_url' => $cancelUrl
             ],
-            'purchase_units'      => [
+            'purchase_units' => [
                 [
                     'amount' => [
                         'currency_code' => $currency,
-                        'value'         => $amount
+                        'value' => $amount
                     ]
                 ]
             ]
@@ -53,7 +53,7 @@ class PaypalApi
     private function getApproveUrl(HttpResponse $response): string
     {
         foreach ($response->result->links as $link) {
-            if ($link->rel == 'approve') {
+            if ('approve' == $link->rel) {
                 return $link->href;
             }
         }

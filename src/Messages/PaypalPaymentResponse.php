@@ -34,9 +34,9 @@ class PaypalPaymentResponse implements PaymentResponse
 
     public function __construct(Request $request, string $clientId, string $secret, bool $isSandbox)
     {
-        $this->request   = $request;
-        $this->clientId  = $clientId;
-        $this->secret    = $secret;
+        $this->request = $request;
+        $this->clientId = $clientId;
+        $this->secret = $secret;
         $this->isSandbox = $isSandbox;
 
         $this->capture();
@@ -69,10 +69,10 @@ class PaypalPaymentResponse implements PaymentResponse
 
     private function capture(): void
     {
-        $token            = $this->request->token;
-        $captureResponse  = (new PaypalApi($this->clientId, $this->secret, $this->isSandbox))->captureOrder($token);
-        $this->status     = new OrderStatus($captureResponse->result->status);
-        $this->paymentId  = $token;
+        $token = $this->request->token;
+        $captureResponse = (new PaypalApi($this->clientId, $this->secret, $this->isSandbox))->captureOrder($token);
+        $this->status = new OrderStatus($captureResponse->result->status);
+        $this->paymentId = $token;
         $this->amountPaid = floatval($captureResponse->result->purchase_units[0]->payments->captures[0]->amount->value);
     }
 }
