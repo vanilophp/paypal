@@ -14,7 +14,7 @@ class Order extends Model implements Payable
 
     public function getPayableId(): string
     {
-        return (string)$this->id;
+        return (string) $this->id;
     }
 
     public function getPayableType(): string

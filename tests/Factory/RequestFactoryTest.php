@@ -18,9 +18,9 @@ class RequestFactoryTest extends TestCase
     public function it_creates_a_request_object()
     {
         $factory = new RequestFactory('mid', 'some-key', 'return', 'cancel', true);
-        $method  = PaymentMethod::create([
+        $method = PaymentMethod::create([
             'gateway' => PaypalPaymentGateway::getName(),
-            'name'    => 'PayPal',
+            'name' => 'PayPal',
         ]);
 
         $order = Order::create(['currency' => 'USD', 'amount' => 13.99]);
