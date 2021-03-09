@@ -20,11 +20,14 @@ use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Payment\Contracts\PaymentGateway;
 use Vanilo\Payment\Contracts\PaymentRequest;
 use Vanilo\Payment\Contracts\PaymentResponse;
+use Vanilo\Paypal\Concerns\HasPaypalInteraction;
 use Vanilo\Paypal\Factories\RequestFactory;
-use Vanilo\Paypal\Factories\ResponseFactory;
+use Vanilo\Paypal\Messages\PaypalPaymentResponse;
 
 class PaypalPaymentGateway implements PaymentGateway
 {
+    use HasPaypalInteraction;
+
     public const DEFAULT_ID = 'paypal';
 
     private ?RequestFactory $requestFactory = null;
@@ -37,7 +40,13 @@ class PaypalPaymentGateway implements PaymentGateway
     public function createPaymentRequest(Payment $payment, Address $shippingAddress = null, array $options = []): PaymentRequest
     {
         if (null === $this->requestFactory) {
-            $this->requestFactory = new RequestFactory();
+            $this->requestFactory = new RequestFactory(
+                $this->clientId,
+                $this->secret,
+                $this->returnUrl,
+                $this->cancelUrl,
+                $this->isSandbox
+            );
         }
 
         return $this->requestFactory->create($payment, $options);
@@ -45,7 +54,7 @@ class PaypalPaymentGateway implements PaymentGateway
 
     public function processPaymentResponse(Request $request, array $options = []): PaymentResponse
     {
-        return ResponseFactory::create();
+        return new PaypalPaymentResponse($request, $this->clientId, $this->secret, $this->isSandbox);
     }
 
     public function isOffline(): bool

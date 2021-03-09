@@ -60,25 +60,19 @@ form:
 ```php
 class PaypalReturnController extends Controller
 {
-    // This action renders a view for the Consumer after return from Paypal.
-    // Before this action, confirm has also been called by Paypal already
-    // in the background therefore the payment status shall be updated
-    public function return(Request $request)
+    public function cancel(Request $request)
     {
         $payment = Payment::findByPaymentId($request->get('orderId'));
 
-        return view('payment.return_paypal', [ // The view is from your application
+        return view('payment.cancel', [ // The view is from your application
             'payment' => $payment,
             'order'   => $payment->getPayable(),
         ]);
     }
 
-    // This is the action that PayPal calls in the background if it
-    // wants to communicate the payment attempt status to our app
-    // it gets called via POST and is a server-to-server call.
-    public function confirm(Request $request)
+    public function return(Request $request)
     {
-        Log::debug('PayPal confirmation', $request->toArray());
+        Log::debug('PayPal return', $request->toArray());
 
         $response = PaymentGateways::make('paypal')->processPaymentResponse($request);
         $payment  = Payment::findByPaymentId($response->getPaymentId());
@@ -104,9 +98,6 @@ class PaypalReturnController extends Controller
             $payment->save();
             event(new PaymentDeclined($payment));
         }
-
-        // Returns a success response in the format Paypal expects
-        return new SuccessResponseToPaypal();
     }
 }
 ```
@@ -118,8 +109,8 @@ The routes for PayPal should look like:
 ```php
 //web.php
 Route::group(['prefix' => 'payment/paypal', 'as' => 'payment.paypal.'], function() {
-    Route::post('confirm', 'PaypalReturnController@confirm')->name('confirm');
-    Route::get('return', 'PaypalReturnController@return')->name('return');
+    Route::post('return', 'PaypalReturnController@return')->name('return');
+    Route::get('cancel', 'PaypalReturnController@cancel')->name('cancel');
 });
 ```
 

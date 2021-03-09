@@ -16,10 +16,12 @@ namespace Vanilo\Paypal\Messages;
 
 use Illuminate\Support\Facades\View;
 use Vanilo\Payment\Contracts\PaymentRequest;
+use Vanilo\Paypal\Api\PaypalApi;
+use Vanilo\Paypal\Concerns\HasPaypalConfiguration;
 
 class PaypalPaymentRequest implements PaymentRequest
 {
-    private string $paymentId;
+    use HasPaypalConfiguration;
 
     private string $currency;
 
@@ -29,15 +31,15 @@ class PaypalPaymentRequest implements PaymentRequest
 
     public function getHtmlSnippet(array $options = []): ?string
     {
+        $api        = new PaypalApi($this->clientId, $this->secret, $this->isSandbox);
+        $approveUrl = $api->createOrder($this->currency, $this->amount, $this->returnUrl, $this->cancelUrl);
+
         return View::make(
             $this->view,
-            array_merge(
-                $this->encryptData(),
-                [
-                    'url' => $this->getUrl(),
-                    'autoRedirect' => $options['autoRedirect'] ?? false
-                ]
-            )
+            [
+                'url'          => $approveUrl,
+                'autoRedirect' => $options['autoRedirect'] ?? false
+            ]
         )->render();
     }
 
@@ -46,9 +48,37 @@ class PaypalPaymentRequest implements PaymentRequest
         return true;
     }
 
-    public function setPaymentId(string $paymentId): self
+    public function setClientId(string $clientId): self
     {
-        $this->paymentId = $paymentId;
+        $this->clientId = $clientId;
+
+        return $this;
+    }
+
+    public function setSecret(string $secret): self
+    {
+        $this->secret = $secret;
+
+        return $this;
+    }
+
+    public function setReturnUrl(string $returnUrl): self
+    {
+        $this->returnUrl = $returnUrl;
+
+        return $this;
+    }
+
+    public function setCancelUrl(string $cancelUrl): self
+    {
+        $this->cancelUrl = $cancelUrl;
+
+        return $this;
+    }
+
+    public function setIsSandbox(bool $isSandbox): PaypalPaymentRequest
+    {
+        $this->isSandbox = $isSandbox;
 
         return $this;
     }

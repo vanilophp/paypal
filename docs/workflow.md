@@ -8,8 +8,8 @@ The typical Vanilo Payments workflow with PayPal consists of the following steps
 4. Generate a **payment request** using the gateway
 5. Inject the **HTML snippet** on the checkout/thankyou page
 6. The HTML snippet **redirects** the Consumer to the **processor's payment page**
-7. @todo add PayPal specific parts here
-
+7. The payment processor makes a GET request to the `return_url` with the PayPal's order id in the parameters
+8. If the client decides to cancel the flow the paymeny processor makes a GET request to the `cancel_url` with the PayPal's order id in the parameters
 > *: If your site's one and only payment method is PayPal (ie. no cash on delivery, etc), then step 2 might not be necessary.
 
 ## Obtain Gateway Instance
@@ -97,16 +97,17 @@ You can pass the following values in the `$options` array:
 
 | Array Key     | Example                                | Description                                                                                                                                      |
 |:--------------|:---------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `key_here`    | @todo add here any paypal values       |                                                                                                                                                  |
-| `description` | Order with number XYZ                  | By default it's "Order no. XXX", but you can pass any value here that will be visible on PayPal as description.                                  |
+| `return_url`  | https://your.site/netopia/return       | A custom return callback URL (of your site) that will be used by PayPal for this concrete single payment.                                 |
+| `cancel_url`  | https://your.site/purchase/cancel      | A custom cancel URL (of your site) where PayPal will redirect the consumer for this single payment if the payment is canceled on the PayPal checkout.     |
 | `view`        | `payment.paypal._form`                 | By default it's `paypal::_request` You can use a custom blade view to render the HTML snippet instead of the default one this library provides.  |
 
 **Example**:
 
 ```php
 $options = [
-    'description' => 'Order with number ' . $order->number,
-    'view'=> 'payment.paypal._form',
+    'return_url' => 'https://your.site/netopia/confirmation',
+    'cancel_url' => 'https://your.site/purchase/complete',
+    'view'       => 'payment.paypal._form',
 ];
 $gateway->createPaymentRequest($payment, null, $options);
 ```
@@ -133,7 +134,18 @@ method will use the copied blade template to render the HTML snippet for PayPal 
 
 ## Confirm And Return URLs
 
-Document PayPal specific handling of these URLs here
+PayPal uses two URLs on your site during the payment process: the **return** and the **cancel**
+URL.
+
+### The Return URL
+
+This is a URL in your web application that will be called (using `GET` method) whenever the PayPal checkout
+is finished e.g. the payment status changes.
+
+### The Cancel URL
+
+This is a URL in your web application where the **consumer will be redirected to**
+(using `GET` method) if the consumer decides to cancel the PayPal checkout.
 
 ---
 

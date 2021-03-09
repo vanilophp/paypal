@@ -34,8 +34,11 @@ class ModuleServiceProvider extends BaseModuleServiceProvider
         if ($this->config('bind', true)) {
             $this->app->bind(PaypalPaymentGateway::class, function ($app) {
                 return new PaypalPaymentGateway(
-                    // @todo add config values here
-                    // $this->config('asd')
+                    $this->config('client_id'),
+                    $this->config('secret'),
+                    $this->config('return_url'),
+                    $this->config('cancel_url'),
+                    $this->config('sandbox')
                 );
             });
         }

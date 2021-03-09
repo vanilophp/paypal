@@ -12,7 +12,6 @@ class CreateOrdersTable extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('number');
             $table->string('currency', 3)->default('EUR');
             $table->decimal('amount', 15, 2);
             $table->timestamps();
@@ -21,6 +20,6 @@ class CreateOrdersTable extends Migration
 
     public function down()
     {
-        Schema::drop('orders');
+        Schema::drop('products');
     }
 }

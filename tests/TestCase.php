@@ -19,17 +19,6 @@ abstract class TestCase extends Orchestra
     }
 
     /**
-     * Set up the database.
-     *
-     * @param \Illuminate\Foundation\Application $app
-     */
-    protected function setUpDatabase($app)
-    {
-        $this->loadMigrationsFrom(__DIR__ . '/migrations');
-        \Artisan::call('migrate', ['--force' => true]);
-    }
-
-    /**
      * @param \Illuminate\Foundation\Application $app
      *
      * @return array
@@ -50,12 +39,26 @@ abstract class TestCase extends Orchestra
     {
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite', [
-            'driver' => 'sqlite',
+            'driver'   => 'sqlite',
             'database' => ':memory:',
-            'prefix' => '',
+            'prefix'   => '',
         ]);
     }
 
+    /**
+     * Set up the database.
+     *
+     * @param \Illuminate\Foundation\Application $app
+     */
+    protected function setUpDatabase($app)
+    {
+        $this->loadMigrationsFrom(__DIR__ . '/migrations');
+        \Artisan::call('migrate', ['--force' => true]);
+    }
+
+    /**
+     * @inheritdoc
+     */
     protected function resolveApplicationConfiguration($app)
     {
         parent::resolveApplicationConfiguration($app);

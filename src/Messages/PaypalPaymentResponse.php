@@ -14,28 +14,42 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Messages;
 
+use Illuminate\Http\Request;
 use Vanilo\Payment\Contracts\PaymentResponse;
+use Vanilo\Paypal\Api\PaypalApi;
+use Vanilo\Paypal\Concerns\HasPaypalCredentials;
+use Vanilo\Paypal\Models\OrderStatus;
 
 class PaypalPaymentResponse implements PaymentResponse
 {
-    private string $message;
+    use HasPaypalCredentials;
+
+    private Request $request;
 
     private string $paymentId;
 
-    public function __construct()
+    private OrderStatus $status;
+
+    private ?float $amountPaid = null;
+
+    public function __construct(Request $request, string $clientId, string $secret, bool $isSandbox)
     {
-        /** @todo initialize attributes */
+        $this->request   = $request;
+        $this->clientId  = $clientId;
+        $this->secret    = $secret;
+        $this->isSandbox = $isSandbox;
+
+        $this->capture();
     }
 
     public function wasSuccessful(): bool
     {
-        /** @todo implement */
-        return true;
+        return $this->status->equals(OrderStatus::COMPLETED());
     }
 
-    public function getMessage(): ?string
+    public function getMessage(): string
     {
-        return $this->message;
+        return $this->status->label();
     }
 
     public function getTransactionId(): ?string
@@ -45,12 +59,20 @@ class PaypalPaymentResponse implements PaymentResponse
 
     public function getAmountPaid(): ?float
     {
-        /** @todo implement */
-        return 0.00;
+        return $this->amountPaid;
     }
 
     public function getPaymentId(): string
     {
         return $this->paymentId;
+    }
+
+    private function capture(): void
+    {
+        $token            = $this->request->token;
+        $captureResponse  = (new PaypalApi($this->clientId, $this->secret, $this->isSandbox))->captureOrder($token);
+        $this->status     = new OrderStatus($captureResponse->result->status);
+        $this->paymentId  = $token;
+        $this->amountPaid = floatval($captureResponse->result->purchase_units[0]->payments->captures[0]->amount->value);
     }
 }

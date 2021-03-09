@@ -5,8 +5,11 @@
 The following `.env` parameters can be set in order to work with this package.
 
 ```dotenv
-PAYPAL_ABC=abcd
-PAYPAL_XYZ=wxyz
+PAYPAL_CLIENT_ID=test-client-id
+PAYPAL_SECRET=test-secret
+PAYPAL_SANDBOX=true
+PAYPAL_RETURN_URL=http://app.com/return
+PAYPAL_CANCEL_URL=http://app.com/cancel
 ```
 
 ## Registration with Payments Module
@@ -115,9 +118,11 @@ typically in the `AppServiceProvider::boot()` method:
 ```php
 $this->app->bind(PaypalPaymentGateway::class, function ($app) {
     return new PaypalPaymentGateway(
-        config('vanilo.paypal.abc'),  // You can use any source 
-        config('vanilo.paypal.xyz'),  // other than config()
-        config('vanilo.paypal.def')   // for passing args
+        config('vanilo.paypal.client_id'),  // You can use any source
+        config('vanilo.paypal.secret'),     // other than config()
+        config('vanilo.paypal.return_url'), // for passing args
+        config('vanilo.paypal.cancel_url'),
+        config('vanilo.paypal.sandbox')
     );
 });
 ```

@@ -1,10 +1,8 @@
 <form method="post" action="{{ $url }}" name="paypal" target="_self">
-    {{-- fields here --}}
-
     @if($autoRedirect)
         <p>{{ __('You will be redirected to the secure payment page') }}</p>
         <p>
-            <img src="{{ 'paypal image **absolute** url here' }}" alt="" title=""
+            <img src="{{ $url }}" alt="" title=""
                  onload="javascript:document.paypal.submit()">
         </p>
     @endif
