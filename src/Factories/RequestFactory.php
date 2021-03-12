@@ -27,6 +27,7 @@ final class RequestFactory
         $result = new PaypalPaymentRequest();
 
         $result
+            ->setPaymentId($payment->getPaymentId())
             ->setCurrency($payment->getCurrency())
             ->setAmount($payment->getAmount())
             ->setClientId($this->clientId)

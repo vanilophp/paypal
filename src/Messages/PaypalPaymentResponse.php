@@ -69,10 +69,11 @@ class PaypalPaymentResponse implements PaymentResponse
 
     private function capture(): void
     {
+        $this->paymentId = $this->request->get('paymentId','');
         $token = $this->request->token;
+
         $captureResponse = (new PaypalApi($this->clientId, $this->secret, $this->isSandbox))->captureOrder($token);
         $this->status = new OrderStatus($captureResponse->result->status);
-        $this->paymentId = $token;
         $this->amountPaid = floatval($captureResponse->result->purchase_units[0]->payments->captures[0]->amount->value);
     }
 }

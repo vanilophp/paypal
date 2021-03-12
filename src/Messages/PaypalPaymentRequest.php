@@ -23,6 +23,8 @@ class PaypalPaymentRequest implements PaymentRequest
 {
     use HasPaypalConfiguration;
 
+    private string $paymentId;
+
     private string $currency;
 
     private float $amount;
@@ -64,7 +66,7 @@ class PaypalPaymentRequest implements PaymentRequest
 
     public function setReturnUrl(string $returnUrl): self
     {
-        $this->returnUrl = $returnUrl;
+        $this->returnUrl = sprintf('%s?paymentId=%s', $returnUrl, $this->paymentId);
 
         return $this;
     }
@@ -100,6 +102,18 @@ class PaypalPaymentRequest implements PaymentRequest
     public function setView(string $view): self
     {
         $this->view = $view;
+
+        return $this;
+    }
+
+    public function getPaymentId(): string
+    {
+        return $this->paymentId;
+    }
+
+    public function setPaymentId(string $paymentId): self
+    {
+        $this->paymentId = $paymentId;
 
         return $this;
     }
