@@ -109,7 +109,7 @@ The routes for PayPal should look like:
 ```php
 //web.php
 Route::group(['prefix' => 'payment/paypal', 'as' => 'payment.paypal.'], function() {
-    Route::post('return', 'PaypalReturnController@return')->name('return');
+    Route::get('return', 'PaypalReturnController@return')->name('return');
     Route::get('cancel', 'PaypalReturnController@cancel')->name('cancel');
 });
 ```
