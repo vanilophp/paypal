@@ -8,6 +8,7 @@ The controller below processes a submitted checkout, prepares the payment and re
 page with the prepared payment request:
 
 ```php
+use Illuminate\Http\Request;
 use Vanilo\Framework\Models\Order;
 use Vanilo\Payment\Factories\PaymentFactory;
 use Vanilo\Payment\Models\PaymentMethod;
@@ -58,6 +59,15 @@ form:
 ### PaypalReturnController
 
 ```php
+use Illuminate\Http\Request;
+use Vanilo\Payment\PaymentGateways;
+use Vanilo\Payment\Models\PaymentMethod;
+use Vanilo\Payment\Models\Payment;
+use Vanilo\Payment\Models\PaymentStatus;
+use Vanilo\Payment\Events\PaymentPartiallyReceived;
+use Vanilo\Payment\Events\PaymentCompleted;
+use Vanilo\Payment\Events\PaymentDeclined;
+
 class PaypalReturnController extends Controller
 {
     public function cancel(Request $request)
