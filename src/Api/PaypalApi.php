@@ -13,6 +13,8 @@ use PayPalHttp\HttpResponse;
 
 class PaypalApi
 {
+    private PayPalHttpClient $client;
+
     public function __construct(string $clientId, string $secret, bool $isSandbox)
     {
         $env = $isSandbox ? new SandboxEnvironment($clientId, $secret) : new ProductionEnvironment($clientId, $secret);

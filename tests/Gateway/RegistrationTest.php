@@ -19,7 +19,7 @@ class RegistrationTest extends TestCase
     }
 
     /** @test */
-    public function the_gateway_can_be_instantiated1()
+    public function the_gateway_can_be_instantiated()
     {
         $payPalGateway = PaymentGateways::make('paypal');
 
