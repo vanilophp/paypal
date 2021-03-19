@@ -15,12 +15,14 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Factories;
 
 use Vanilo\Payment\Contracts\Payment;
+use Vanilo\Payment\Support\ReplacesPaymentUrlParameters;
 use Vanilo\Paypal\Concerns\HasPaypalInteraction;
 use Vanilo\Paypal\Messages\PaypalPaymentRequest;
 
 final class RequestFactory
 {
     use HasPaypalInteraction;
+    use ReplacesPaymentUrlParameters;
 
     public function create(Payment $payment, array $options = []): PaypalPaymentRequest
     {
@@ -32,17 +34,19 @@ final class RequestFactory
             ->setAmount($payment->getAmount())
             ->setClientId($this->clientId)
             ->setSecret($this->secret)
-            ->setReturnUrl($this->returnUrl)
-            ->setCancelUrl($this->cancelUrl)
-            ->setIsSandbox($this->isSandbox);
-
-        if (isset($options['return_url'])) {
-            $result->setReturnUrl($options['return_url']);
-        }
-
-        if (isset($options['cancel_url'])) {
-            $result->setCancelUrl($options['cancel_url']);
-        }
+            ->setIsSandbox($this->isSandbox)
+            ->setReturnUrl(
+                $this->replaceUrlParameters(
+                    $options['return_url'] ?? $this->returnUrl,
+                    $payment
+                )
+            )
+            ->setCancelUrl(
+                $this->replaceUrlParameters(
+                    $options['cancel_url'] ?? $this->cancelUrl,
+                    $payment
+                )
+            );
 
         if (isset($options['view'])) {
             $result->setView($options['view']);

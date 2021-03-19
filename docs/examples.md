@@ -70,9 +70,9 @@ use Vanilo\Payment\Events\PaymentDeclined;
 
 class PaypalReturnController extends Controller
 {
-    public function cancel(Request $request)
+    public function cancel(Request $request, string $paymentId)
     {
-        $payment = Payment::findByPaymentId($request->get('orderId'));
+        $payment = Payment::findByPaymentId($paymentId);
 
         return view('payment.cancel', [ // The view is from your application
             'payment' => $payment,
@@ -80,12 +80,12 @@ class PaypalReturnController extends Controller
         ]);
     }
 
-    public function return(Request $request)
+    public function return(Request $request, string $paymentId)
     {
         Log::debug('PayPal return', $request->toArray());
 
         $response = PaymentGateways::make('paypal')->processPaymentResponse($request);
-        $payment  = Payment::findByPaymentId($response->getPaymentId());
+        $payment  = Payment::findByPaymentId($paymentId);
 
         if (!$payment) {
             // This returns an HTTP response in the format that Paypal understands
@@ -119,9 +119,15 @@ The routes for PayPal should look like:
 ```php
 //web.php
 Route::group(['prefix' => 'payment/paypal', 'as' => 'payment.paypal.'], function() {
-    Route::get('return', 'PaypalReturnController@return')->name('return');
-    Route::get('cancel', 'PaypalReturnController@cancel')->name('cancel');
+    Route::get('return/{paymentId}', 'PaypalReturnController@return')->name('return');
+    Route::get('cancel/{paymentId}', 'PaypalReturnController@cancel')->name('cancel');
 });
+```
+
+```dotenv
+# The routes above translate to this in your .env config:
+PAYPAL_RETURN_URL=/payment/paypal/return/{paymentId}
+PAYPAL_CANCEL_URL=/payment/paypal/cancel/{paymentId}
 ```
 
 **IMPORTANT!**: Make sure to **disable CSRF verification** for these URLs, by adding them as

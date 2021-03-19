@@ -8,9 +8,42 @@ The following `.env` parameters can be set in order to work with this package.
 PAYPAL_CLIENT_ID=test-client-id
 PAYPAL_SECRET=test-secret
 PAYPAL_SANDBOX=true
-PAYPAL_RETURN_URL=http://app.com/return
-PAYPAL_CANCEL_URL=http://app.com/cancel
+PAYPAL_RETURN_URL=http://app.com/return/{paymentId}
+PAYPAL_CANCEL_URL=http://app.com/cancel?pid={paymentId}
 ```
+
+### Return and Cancel URLs
+
+The return and cancel URLs are not defined by this library, but by your
+application. Routes, controllers, etc need to be set up in your app and
+be passed to this library by setting them in the `PAYPAL_RETURN_URL` and
+`PAYPAL_CANCEL_URL` env vars.
+
+In order to identify the payment from a Paypal callback, your route
+needs to contain the payment id. It's up to you, whether you want to get
+it as a query or as a route param. The only requirement is to set have
+it somewhere, so that you can identify it.
+
+The `{paymentId}` parameter in the value will be replaced with the
+actual payment id.
+
+**Return URL Examples**:
+
+- `PAYPAL_RETURN_URL=https://yourapp.com/payment/paypal/{paymentId}/return`
+- `PAYPAL_RETURN_URL=https://yourapp.com/ppret?payment={paymentId}`
+- `PAYPAL_RETURN_URL=https://yourapp.com/paypal?id={paymentId}&op=return`
+- `PAYPAL_RETURN_URL=/checkout/return/{paymentId}`
+
+**Cancel URL Examples**:
+
+- `PAYPAL_CANCEL_URL=https://yourapp.com/payment/paypal/{paymentId}/cancel`
+- `PAYPAL_CANCEL_URL=https://yourapp.com/ppcancel?payment={paymentId}`
+- `PAYPAL_CANCEL_URL=https://yourapp.com/paypal?id={paymentId}&op=cancel`
+- `PAYPAL_CANCEL_URL=/checkout/cancel/{paymentId}`
+
+If you pass a relative path, the library will use Laravel's `URL::to()`
+method to convert it to an absolute url of your application. This can
+be convenient using the same settings for dev/staging/prod environments.
 
 ## Registration with Payments Module
 

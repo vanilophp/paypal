@@ -66,9 +66,14 @@ class PaypalPaymentRequest implements PaymentRequest
 
     public function setReturnUrl(string $returnUrl): self
     {
-        $this->returnUrl = sprintf('%s?paymentId=%s', $returnUrl, $this->paymentId);
+        $this->returnUrl = $returnUrl;
 
         return $this;
+    }
+
+    public function getReturnUrl(): string
+    {
+        return $this->returnUrl;
     }
 
     public function setCancelUrl(string $cancelUrl): self
@@ -76,6 +81,11 @@ class PaypalPaymentRequest implements PaymentRequest
         $this->cancelUrl = $cancelUrl;
 
         return $this;
+    }
+
+    public function getCancelUrl(): string
+    {
+        return $this->cancelUrl;
     }
 
     public function setIsSandbox(bool $isSandbox): PaypalPaymentRequest
