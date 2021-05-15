@@ -42,4 +42,44 @@ class PaymentResponseTest extends TestCase
         $response = new PaypalPaymentResponse('XXX.xyz', PaypalOrderStatus::PAYER_ACTION_REQUIRED(), 11.27);
         $this->assertTrue($response->getNativeStatus()->equals(PaypalOrderStatus::PAYER_ACTION_REQUIRED()));
     }
+
+    /** @test */
+    public function created_and_saved_native_statuses_map_to_pending_status()
+    {
+        $reponse = new PaypalPaymentResponse('', PaypalOrderStatus::CREATED(), null);
+
+        $this->assertTrue($reponse->getStatus()->isPending());
+    }
+
+    /** @test */
+    public function approved_native_status_maps_to_authorized_status()
+    {
+        $reponse = new PaypalPaymentResponse('', PaypalOrderStatus::APPROVED(), null);
+
+        $this->assertTrue($reponse->getStatus()->isAuthorized());
+    }
+
+    /** @test */
+    public function voided_native_status_maps_to_declined_status()
+    {
+        $reponse = new PaypalPaymentResponse('', PaypalOrderStatus::VOIDED(), null);
+
+        $this->assertTrue($reponse->getStatus()->isDeclined());
+    }
+
+    /** @test */
+    public function completed_native_status_maps_to_paid_status()
+    {
+        $reponse = new PaypalPaymentResponse('', PaypalOrderStatus::COMPLETED(), null);
+
+        $this->assertTrue($reponse->getStatus()->isPaid());
+    }
+
+    /** @test */
+    public function payer_action_required_native_status_maps_to_on_hold_status()
+    {
+        $reponse = new PaypalPaymentResponse('', PaypalOrderStatus::PAYER_ACTION_REQUIRED(), null);
+
+        $this->assertTrue($reponse->getStatus()->isOnHold());
+    }
 }

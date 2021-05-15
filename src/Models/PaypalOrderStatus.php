@@ -41,4 +41,18 @@ final class PaypalOrderStatus extends Enum
     public const VOIDED = 'VOIDED';
     public const COMPLETED = 'COMPLETED';
     public const PAYER_ACTION_REQUIRED = 'PAYER_ACTION_REQUIRED';
+
+    protected static array $labels = [];
+
+    protected static function boot()
+    {
+        static::$labels = [
+            self::CREATED => __('The order was created'),
+            self::SAVED => __('The order is in progress, no purchase was made yet'),
+            self::APPROVED => __('The customer approved the payment through PayPal'),
+            self::VOIDED => __('All purchase units in the order are voided'),
+            self::COMPLETED => __('The payment was authorized or the authorized payment was captured for the order'),
+            self::PAYER_ACTION_REQUIRED => __('The order requires an action from the payer (e.g. 3DS authentication)'),
+        ];
+    }
 }

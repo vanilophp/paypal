@@ -17,6 +17,7 @@ namespace Vanilo\Paypal\Messages;
 use Konekt\Enum\Enum;
 use Vanilo\Payment\Contracts\PaymentResponse;
 use Vanilo\Payment\Contracts\PaymentStatus;
+use Vanilo\Payment\Models\PaymentStatusProxy;
 use Vanilo\Paypal\Models\PaypalOrderStatus;
 
 class PaypalPaymentResponse implements PaymentResponse
@@ -27,6 +28,8 @@ class PaypalPaymentResponse implements PaymentResponse
 
     private PaypalOrderStatus $nativeStatus;
 
+    private ?PaymentStatus $status = null;
+
     public function __construct(string $paymentId, PaypalOrderStatus $nativeStatus, ?float $amountPaid)
     {
         $this->paymentId = $paymentId;
@@ -36,7 +39,7 @@ class PaypalPaymentResponse implements PaymentResponse
 
     public function wasSuccessful(): bool
     {
-        return $this->nativeStatus->equals(PaypalOrderStatus::COMPLETED());
+        return $this->nativeStatus->isCompleted();
     }
 
     public function getMessage(): string
@@ -61,7 +64,32 @@ class PaypalPaymentResponse implements PaymentResponse
 
     public function getStatus(): PaymentStatus
     {
-        // TODO: Implement getStatus() method.
+        if (null === $this->status) {
+            switch ($this->nativeStatus->value()) {
+                case PaypalOrderStatus::CREATED:
+                case PaypalOrderStatus::SAVED:
+                    $this->status = PaymentStatusProxy::PENDING();
+                break;
+
+                case PaypalOrderStatus::APPROVED:
+                    $this->status = PaymentStatusProxy::AUTHORIZED();
+                    break;
+
+                case PaypalOrderStatus::VOIDED:
+                    $this->status = PaymentStatusProxy::DECLINED();
+                    break;
+
+                case PaypalOrderStatus::COMPLETED:
+                    $this->status = PaymentStatusProxy::PAID();
+                    break;
+
+                case PaypalOrderStatus::PAYER_ACTION_REQUIRED:
+                    $this->status = PaymentStatusProxy::ON_HOLD();
+                    break;
+            }
+        }
+
+        return $this->status;
     }
 
     public function getNativeStatus(): Enum
