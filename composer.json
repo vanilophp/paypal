@@ -22,7 +22,7 @@
         "php": "^7.4|^8.0",
         "konekt/concord": "^1.5",
         "vanilo/payment": "^2.2",
-        "vanilo/contracts": "^2.1",
+        "vanilo/contracts": "^2.2",
         "ext-dom": "*",
         "ext-openssl": "*",
         "ext-simplexml": "*",

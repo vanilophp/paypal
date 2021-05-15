@@ -22,7 +22,7 @@ use Vanilo\Payment\Contracts\PaymentRequest;
 use Vanilo\Payment\Contracts\PaymentResponse;
 use Vanilo\Paypal\Concerns\HasPaypalInteraction;
 use Vanilo\Paypal\Factories\RequestFactory;
-use Vanilo\Paypal\Messages\PaypalPaymentResponse;
+use Vanilo\Paypal\Factories\ResponseFactory;
 
 class PaypalPaymentGateway implements PaymentGateway
 {
@@ -31,6 +31,8 @@ class PaypalPaymentGateway implements PaymentGateway
     public const DEFAULT_ID = 'paypal';
 
     private ?RequestFactory $requestFactory = null;
+
+    private ?ResponseFactory $responseFactory = null;
 
     public static function getName(): string
     {
@@ -54,7 +56,11 @@ class PaypalPaymentGateway implements PaymentGateway
 
     public function processPaymentResponse(Request $request, array $options = []): PaymentResponse
     {
-        return new PaypalPaymentResponse($request, $this->clientId, $this->secret, $this->isSandbox);
+        if (null === $this->responseFactory) {
+            $this->responseFactory = new ResponseFactory($this->clientId, $this->secret, $this->isSandbox);
+        }
+
+        return $this->responseFactory->createFromRequest($request);
     }
 
     public function isOffline(): bool

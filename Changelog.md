@@ -4,3 +4,4 @@
 ##### 2021-XX-YY
 
 - Initial release
+- Requires Vanilo 2.2+

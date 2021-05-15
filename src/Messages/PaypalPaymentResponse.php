@@ -14,42 +14,34 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Messages;
 
-use Illuminate\Http\Request;
+use Konekt\Enum\Enum;
 use Vanilo\Payment\Contracts\PaymentResponse;
-use Vanilo\Paypal\Api\PaypalApi;
-use Vanilo\Paypal\Concerns\HasPaypalCredentials;
-use Vanilo\Paypal\Models\OrderStatus;
+use Vanilo\Payment\Contracts\PaymentStatus;
+use Vanilo\Paypal\Models\PaypalOrderStatus;
 
 class PaypalPaymentResponse implements PaymentResponse
 {
-    use HasPaypalCredentials;
-
-    private Request $request;
-
     private string $paymentId;
 
-    private OrderStatus $status;
+    private ?float $amountPaid;
 
-    private ?float $amountPaid = null;
+    private PaypalOrderStatus $nativeStatus;
 
-    public function __construct(Request $request, string $clientId, string $secret, bool $isSandbox)
+    public function __construct(string $paymentId, PaypalOrderStatus $nativeStatus, ?float $amountPaid)
     {
-        $this->request = $request;
-        $this->clientId = $clientId;
-        $this->secret = $secret;
-        $this->isSandbox = $isSandbox;
-
-        $this->capture();
+        $this->paymentId = $paymentId;
+        $this->nativeStatus = $nativeStatus;
+        $this->amountPaid = $amountPaid;
     }
 
     public function wasSuccessful(): bool
     {
-        return $this->status->equals(OrderStatus::COMPLETED());
+        return $this->nativeStatus->equals(PaypalOrderStatus::COMPLETED());
     }
 
     public function getMessage(): string
     {
-        return $this->status->label();
+        return $this->nativeStatus->label();
     }
 
     public function getTransactionId(): ?string
@@ -67,13 +59,13 @@ class PaypalPaymentResponse implements PaymentResponse
         return $this->paymentId;
     }
 
-    private function capture(): void
+    public function getStatus(): PaymentStatus
     {
-        $this->paymentId = $this->request->get('paymentId', '');
-        $token = $this->request->token;
+        // TODO: Implement getStatus() method.
+    }
 
-        $captureResponse = (new PaypalApi($this->clientId, $this->secret, $this->isSandbox))->captureOrder($token);
-        $this->status = new OrderStatus($captureResponse->result->status);
-        $this->amountPaid = floatval($captureResponse->result->purchase_units[0]->payments->captures[0]->amount->value);
+    public function getNativeStatus(): Enum
+    {
+        return $this->nativeStatus;
     }
 }
