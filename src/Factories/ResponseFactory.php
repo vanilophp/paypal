@@ -16,7 +16,6 @@ namespace Vanilo\Paypal\Factories;
 
 use Illuminate\Http\Request;
 use Vanilo\Paypal\Api\PaypalApi;
-use Vanilo\Paypal\Concerns\HasPaypalCredentials;
 use Vanilo\Paypal\Exceptions\MissingPaymentIdException;
 use Vanilo\Paypal\Messages\PaypalPaymentResponse;
 use Vanilo\Paypal\Models\PaypalOrderStatus;
