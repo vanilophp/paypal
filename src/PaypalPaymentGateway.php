@@ -21,6 +21,7 @@ use Vanilo\Payment\Contracts\PaymentGateway;
 use Vanilo\Payment\Contracts\PaymentRequest;
 use Vanilo\Payment\Contracts\PaymentResponse;
 use Vanilo\Paypal\Concerns\HasPaypalInteraction;
+use Vanilo\Paypal\Exceptions\MissingPaymentIdException;
 use Vanilo\Paypal\Factories\RequestFactory;
 use Vanilo\Paypal\Factories\ResponseFactory;
 
@@ -54,13 +55,21 @@ class PaypalPaymentGateway implements PaymentGateway
         return $this->requestFactory->create($payment, $options);
     }
 
+    /**
+     * @throws MissingPaymentIdException
+     */
     public function processPaymentResponse(Request $request, array $options = []): PaymentResponse
     {
         if (null === $this->responseFactory) {
             $this->responseFactory = new ResponseFactory($this->clientId, $this->secret, $this->isSandbox);
         }
 
-        return $this->responseFactory->createFromRequest($request);
+        $paymentId = $options['paymentId'] ?? $request->route('paymentId');
+        if (null === $paymentId) {
+            throw new MissingPaymentIdException('The `paymentId` could not be obtained');
+        }
+
+        return $this->responseFactory->createFromRequest($request, $paymentId);
     }
 
     public function isOffline(): bool

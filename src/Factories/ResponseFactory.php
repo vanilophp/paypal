@@ -16,7 +16,6 @@ namespace Vanilo\Paypal\Factories;
 
 use Illuminate\Http\Request;
 use Vanilo\Paypal\Api\PaypalApi;
-use Vanilo\Paypal\Exceptions\MissingPaymentIdException;
 use Vanilo\Paypal\Messages\PaypalPaymentResponse;
 use Vanilo\Paypal\Models\PaypalOrderStatus;
 
@@ -29,14 +28,9 @@ final class ResponseFactory
         $this->paypalApi = new PaypalApi($clientId, $secret, $isSandbox);
     }
 
-    public function createFromRequest(Request $request): PaypalPaymentResponse
+    public function createFromRequest(Request $request, string $paymentId): PaypalPaymentResponse
     {
-        $paymentId = $request->get('paymentId');
-        if (null === $paymentId) {
-            throw new MissingPaymentIdException('The `paymentId` parameter is missing from the request');
-        }
-
-        $token = $request->token;
+        $token = $request->get('token');
 
         $captureResponse = $this->paypalApi->captureOrder($token);
         $result = $captureResponse->result;

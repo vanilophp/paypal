@@ -6,7 +6,7 @@
 [![Packagist downloads](https://img.shields.io/packagist/dt/vanilo/paypal.svg?style=flat-square)](https://packagist.org/packages/vanilo/paypal)
 [![MIT Software License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
-This library enables [PayPal](https://developer.paypal.com/docs/business/checkout/server-side-api-calls/)  
+This library enables [PayPal](https://developer.paypal.com/docs/business/checkout/server-side-api-calls/)
 for [Vanilo Payments](https://vanilo.io/docs/master/payments).
 
 Being a [Concord Module](https://konekt.dev/concord/1.9/modules) it is intended to be used by

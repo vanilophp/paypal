@@ -25,7 +25,7 @@ class PaypalApi
     public function createOrder(string $currency, float $amount, string $returnUrl, string $cancelUrl): string
     {
         $orderCreateRequest = new OrdersCreateRequest();
-        $orderCreateRequest->prefer('return=representation');
+        $orderCreateRequest->prefer('return=minimal');
         $orderCreateRequest->body = [
             'intent' => 'CAPTURE',
             'application_context' => [
