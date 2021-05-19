@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Contains the PaypalOrder class.
+ * Contains the Paypal Order Links class.
  *
  * @copyright   Copyright (c) 2021 Attila Fulop
  * @author      Attila Fulop
@@ -14,6 +14,13 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Models;
 
-final class PaypalOrder
+class Links
 {
+    public ?string $self = null;
+
+    public ?string $approve = null;
+
+    public ?string $update = null;
+
+    public ?string $capture = null;
 }

@@ -16,5 +16,8 @@
   </testsuites>
   <php>
     <env name="APP_DEBUG" value="true"/>
+    <env name="PAYPAL_CLIENT_ID" value="put client id in phpunit.xml or in env"/>
+    <env name="PAYPAL_SECRET" value="put client secret in phpunit.xml or in env"/>
+    <env name="PAYPAL_SANDBOX" value="true" force="true"/>
   </php>
 </phpunit>

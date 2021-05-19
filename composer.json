@@ -20,6 +20,7 @@
     },
     "require": {
         "php": "^7.4|^8.0",
+        "ext-json": "*",
         "konekt/concord": "^1.5",
         "vanilo/payment": "^2.2",
         "vanilo/contracts": "^2.2",

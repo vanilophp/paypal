@@ -16,12 +16,12 @@ namespace Vanilo\Paypal\Factories;
 
 use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Payment\Support\ReplacesPaymentUrlParameters;
-use Vanilo\Paypal\Concerns\HasPaypalInteraction;
+use Vanilo\Paypal\Concerns\HasPaypalConstructor;
 use Vanilo\Paypal\Messages\PaypalPaymentRequest;
 
 final class RequestFactory
 {
-    use HasPaypalInteraction;
+    use HasPaypalConstructor;
     use ReplacesPaymentUrlParameters;
 
     public function create(Payment $payment, array $options = []): PaypalPaymentRequest

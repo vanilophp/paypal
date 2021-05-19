@@ -20,14 +20,14 @@ use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Payment\Contracts\PaymentGateway;
 use Vanilo\Payment\Contracts\PaymentRequest;
 use Vanilo\Payment\Contracts\PaymentResponse;
-use Vanilo\Paypal\Concerns\HasPaypalInteraction;
+use Vanilo\Paypal\Concerns\HasPaypalConstructor;
 use Vanilo\Paypal\Exceptions\MissingPaymentIdException;
 use Vanilo\Paypal\Factories\RequestFactory;
 use Vanilo\Paypal\Factories\ResponseFactory;
 
 class PaypalPaymentGateway implements PaymentGateway
 {
-    use HasPaypalInteraction;
+    use HasPaypalConstructor;
 
     public const DEFAULT_ID = 'paypal';
 

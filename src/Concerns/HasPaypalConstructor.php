@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Concerns;
 
-trait HasPaypalInteraction
+trait HasPaypalConstructor
 {
     use HasPaypalConfiguration;
 
