@@ -13,7 +13,7 @@ use PayPalHttp\HttpResponse;
 
 class PaypalApi
 {
-    private PayPalHttpClient $client;
+    public PayPalHttpClient $client;
 
     public function __construct(string $clientId, string $secret, bool $isSandbox)
     {
