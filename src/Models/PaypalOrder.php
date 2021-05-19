@@ -16,5 +16,4 @@ namespace Vanilo\Paypal\Models;
 
 final class PaypalOrder
 {
-
 }
