@@ -22,10 +22,18 @@ final class Order
 
     public Links $links;
 
-    public function __construct(string $id, ?PaypalOrderStatus $status = null)
+    public float $amount;
+
+    public string $currency;
+
+    public ?string $vaniloPaymentId = null;
+
+    public function __construct(string $id, ?PaypalOrderStatus $status, float $amount, string $currency)
     {
         $this->id = $id;
         $this->status = $status ?? new PaypalOrderStatus();
         $this->links = new Links();
+        $this->amount = $amount;
+        $this->currency = $currency;
     }
 }

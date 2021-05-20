@@ -76,7 +76,7 @@ class PaypalPaymentResponse implements PaymentResponse
                     break;
 
                 case PaypalOrderStatus::VOIDED:
-                    $this->status = PaymentStatusProxy::DECLINED();
+                    $this->status = PaymentStatusProxy::CANCELLED();
                     break;
 
                 case PaypalOrderStatus::COMPLETED:

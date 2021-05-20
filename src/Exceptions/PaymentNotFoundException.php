@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Contains the MissingPaymentIdException class.
+ * Contains the PaymentNotFoundException class.
  *
  * @copyright   Copyright (c) 2021 Attila Fulop
  * @author      Attila Fulop
@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Exceptions;
 
-use RuntimeException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class MissingPaymentIdException extends RuntimeException
+class PaymentNotFoundException extends NotFoundHttpException
 {
 }

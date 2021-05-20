@@ -15,29 +15,49 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Factories;
 
 use Illuminate\Http\Request;
-use Vanilo\Paypal\Api\PaypalApi;
+use Vanilo\Payment\Contracts\Payment;
+use Vanilo\Payment\Models\PaymentProxy;
+use Vanilo\Paypal\Exceptions\PaymentNotFoundException;
 use Vanilo\Paypal\Messages\PaypalPaymentResponse;
-use Vanilo\Paypal\Models\PaypalOrderStatus;
+use Vanilo\Paypal\Models\Order;
+use Vanilo\Paypal\Repository\OrderRepository;
 
 final class ResponseFactory
 {
-    private PaypalApi $paypalApi;
+    private OrderRepository $orderRepository;
 
-    public function __construct(string $clientId, string $secret, bool $isSandbox)
+    public function __construct(OrderRepository $orderRepository)
     {
-        $this->paypalApi = new PaypalApi($clientId, $secret, $isSandbox);
+        $this->orderRepository = $orderRepository;
     }
 
-    public function createFromRequest(Request $request, string $paymentId): PaypalPaymentResponse
+    public function createFromRequest(Request $request): PaypalPaymentResponse
     {
-        $token = $request->get('token');
+        $paypalOrderId = $request->get('token');
 
-        $captureResponse = $this->paypalApi->captureOrder($token);
-        $result = $captureResponse->result;
-        $status = new PaypalOrderStatus($result['status']);
-        $amountPaid = $result['purchase_units'][0]['payments']['captures'][0]['amount']['value'];
-        $amountPaid = null !== $amountPaid ? floatval($amountPaid) : $amountPaid;
+        $paypalOrder = $this->orderRepository->get($paypalOrderId);
+        $payment = $this->findPayment($paypalOrder);
+        if (null === $payment) {
+            throw new PaymentNotFoundException("No matching payment was found for PayPal order `$paypalOrderId`");
+        }
 
-        return new PaypalPaymentResponse($paymentId, $status, $amountPaid);
+        $amountPaid = null;
+        if ($paypalOrder->status->isApproved() || $paypalOrder->status->isCompleted()) {
+            $amountPaid = $paypalOrder->amount;
+        }
+
+        return new PaypalPaymentResponse($payment->getPaymentId(), $paypalOrder->status, $amountPaid);
+    }
+
+    private function findPayment(Order $paypalOrder): ?Payment
+    {
+        if (null !== $paypalOrder->vaniloPaymentId) {
+            if ($payment = PaymentProxy::find($paypalOrder->vaniloPaymentId)) {
+                return $payment;
+            }
+        }
+
+        // Fallback to locating by Paypal id, as a second chance
+        return PaymentProxy::findByRemoteId($paypalOrder->id);
     }
 }

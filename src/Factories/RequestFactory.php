@@ -15,43 +15,37 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Factories;
 
 use Vanilo\Payment\Contracts\Payment;
-use Vanilo\Payment\Support\ReplacesPaymentUrlParameters;
-use Vanilo\Paypal\Concerns\HasPaypalConstructor;
 use Vanilo\Paypal\Messages\PaypalPaymentRequest;
+use Vanilo\Paypal\Models\Order;
+use Vanilo\Paypal\Repository\OrderRepository;
 
 final class RequestFactory
 {
-    use HasPaypalConstructor;
-    use ReplacesPaymentUrlParameters;
+    private OrderRepository $orderRepository;
+
+    public function __construct(OrderRepository $orderRepository)
+    {
+        $this->orderRepository = $orderRepository;
+    }
 
     public function create(Payment $payment, array $options = []): PaypalPaymentRequest
     {
-        $result = new PaypalPaymentRequest();
-
-        $result
-            ->setPaymentId($payment->getPaymentId())
-            ->setCurrency($payment->getCurrency())
-            ->setAmount($payment->getAmount())
-            ->setClientId($this->clientId)
-            ->setSecret($this->secret)
-            ->setIsSandbox($this->isSandbox)
-            ->setReturnUrl(
-                $this->replaceUrlParameters(
-                    $options['return_url'] ?? $this->returnUrl,
-                    $payment
-                )
-            )
-            ->setCancelUrl(
-                $this->replaceUrlParameters(
-                    $options['cancel_url'] ?? $this->cancelUrl,
-                    $payment
-                )
-            );
+        $paypalOrder = $this->getPaypalOrder($payment, $options['return_url'] ?? null, $options['cancel_url'] ?? null);
+        $result = new PaypalPaymentRequest($paypalOrder->links->approve);
 
         if (isset($options['view'])) {
             $result->setView($options['view']);
         }
 
         return $result;
+    }
+
+    private function getPaypalOrder(Payment $payment, ?string $returnUrl, ?string $cancelUrl): Order
+    {
+        if (null !== $payment->remote_id) {
+            return $this->orderRepository->get($payment->remote_id);
+        }
+
+        return $this->orderRepository->create($payment, $returnUrl, $cancelUrl);
     }
 }

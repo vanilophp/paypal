@@ -60,11 +60,11 @@ class PaymentResponseTest extends TestCase
     }
 
     /** @test */
-    public function voided_native_status_maps_to_declined_status()
+    public function voided_native_status_maps_to_cancelled_status()
     {
         $reponse = new PaypalPaymentResponse('', PaypalOrderStatus::VOIDED(), null);
 
-        $this->assertTrue($reponse->getStatus()->isDeclined());
+        $this->assertTrue($reponse->getStatus()->isCancelled());
     }
 
     /** @test */
