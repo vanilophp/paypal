@@ -53,7 +53,11 @@ final class RequestFactory
             return $this->orderRepository->get($payment->remote_id);
         }
 
-        return $this->orderRepository->create($payment, $returnUrl, $cancelUrl);
+        $order = $this->orderRepository->create($payment, $returnUrl, $cancelUrl);
+        $payment->remote_id = $order->id;
+        $payment->save();
+
+        return $order;
     }
 
     private function url(Payment $payment, array $options, string $which): ?string

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Tests\Factory;
 
 use PayPalHttp\HttpRequest;
+use PayPalHttp\HttpResponse;
 use Vanilo\Payment\Factories\PaymentFactory;
 use Vanilo\Payment\Models\PaymentMethod;
 use Vanilo\Paypal\Factories\RequestFactory;
@@ -78,5 +79,27 @@ class RequestFactoryTest extends TestCase
             'http://localhost/pp/cancel?pid=' . $payment->getPaymentId(),
             $observed->request->body['application_context']['cancel_url']
         );
+    }
+
+    /** @test */
+    public function it_saves_the_paypal_order_id_as_remote_id_in_the_payment()
+    {
+        $observed = new class() {
+            public ?HttpResponse $response = null;
+
+            public function observe($r)
+            {
+                $this->response = $r;
+            }
+        };
+
+        $factory = new RequestFactory($this->getOrderRepository(null, [$observed, 'observe']));
+        $order = Order::create(['currency' => 'USD', 'amount' => 38.00]);
+        $payment = PaymentFactory::createFromPayable($order, $this->method);
+        $factory->create($payment);
+
+        $this->assertEquals($observed->response->result->id, $payment->fresh()->remote_id);
+
+
     }
 }

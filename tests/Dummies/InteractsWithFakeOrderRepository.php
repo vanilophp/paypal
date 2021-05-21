@@ -21,11 +21,16 @@ trait InteractsWithFakeOrderRepository
 {
     private ?FakePaypalClient $fakePaypalClient = null;
 
-    private function getOrderRepository(?callable $observer = null): OrderRepository
+    private function getOrderRepository(?callable $requestObserver = null, ?callable $responseObserver = null): OrderRepository
     {
         $this->fakePaypalClient = new FakePaypalClient();
-        if (null !== $observer) {
-            $this->fakePaypalClient->observeRequestWith($observer);
+
+        if (null !== $requestObserver) {
+            $this->fakePaypalClient->observeRequestWith($requestObserver);
+        }
+
+        if (null !== $responseObserver) {
+            $this->fakePaypalClient->observeResponseWith($responseObserver);
         }
 
         return new OrderRepository($this->fakePaypalClient);

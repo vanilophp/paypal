@@ -34,7 +34,9 @@ class FakePaypalClient implements PaypalClient
 {
     private array $data = [];
 
-    private $observer = null;
+    private $requestObserver = null;
+
+    private $responseObserver = null;
 
     private NanoIdGenerator $nanoId;
 
@@ -45,18 +47,28 @@ class FakePaypalClient implements PaypalClient
 
     public function execute(HttpRequest $httpRequest): HttpResponse
     {
-        if (null !== $this->observer) {
-            call_user_func($this->observer, $httpRequest);
+        if (null !== $this->requestObserver) {
+            call_user_func($this->requestObserver, $httpRequest);
         }
 
         $method = $this->getMethodName($httpRequest);
 
-        return method_exists($this, $method) ? $this->{$method}($httpRequest) : $this->unknownRequest($httpRequest);
+        $response = method_exists($this, $method) ? $this->{$method}($httpRequest) : $this->unknownRequest($httpRequest);
+        if (null !== $this->responseObserver) {
+            call_user_func($this->responseObserver, $response);
+        }
+
+        return $response;
     }
 
     public function observeRequestWith(callable $observer): void
     {
-        $this->observer = $observer;
+        $this->requestObserver = $observer;
+    }
+
+    public function observeResponseWith(callable $observer): void
+    {
+        $this->responseObserver = $observer;
     }
 
     public function simulateOrderApproval(string $id): void
