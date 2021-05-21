@@ -15,13 +15,19 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Tests;
 
 use ReflectionClass;
-use Vanilo\Paypal\Api\PaypalApi;
+use Vanilo\Paypal\Client\RealPaypalClient;
+use Vanilo\Paypal\Models\Order;
+use Vanilo\Paypal\Models\PaypalOrderStatus;
 use Vanilo\Paypal\Repository\OrderRepository;
+use Vanilo\Paypal\Tests\Dummies\CreatesDummyPayment;
+use Vanilo\Paypal\Tests\Fakes\FakePaypalClient;
 
 class OrderRepositoryTest extends TestCase
 {
+    use CreatesDummyPayment;
+
     /** @test */
-    public function the_paypal_api_class_gets_injected_by_the_container()
+    public function the_real_paypal_client_gets_injected_by_the_container()
     {
         $repo = app(OrderRepository::class);
 
@@ -29,8 +35,47 @@ class OrderRepositoryTest extends TestCase
 
         // Look at this Chema!! I'm testing private properties 👻
         $reflector = new ReflectionClass(OrderRepository::class);
-        $apiProperty = $reflector->getProperty('api');
+        $apiProperty = $reflector->getProperty('client');
         $apiProperty->setAccessible(true);
-        $this->assertInstanceOf(PaypalApi::class, $apiProperty->getValue($repo));
+        $this->assertInstanceOf(RealPaypalClient::class, $apiProperty->getValue($repo));
+    }
+
+    /** @test */
+    public function an_order_can_be_created()
+    {
+        $repo = $this->getOrderRepository();
+        $payment = $this->getPayment('EUR', 9.11);
+        $order = $repo->create($payment);
+
+        $this->assertInstanceOf(Order::class, $order);
+        $this->assertIsString($order->id);
+        $this->assertNotEmpty($order->id);
+        $this->assertEquals('EUR', $order->currency);
+        $this->assertEquals(9.11, $order->amount);
+        $this->assertTrue($order->status->equals(PaypalOrderStatus::CREATED()));
+        $this->assertEquals($payment->getPaymentId(), $order->vaniloPaymentId);
+    }
+
+    /** @test */
+    public function order_can_be_returned()
+    {
+        $repo = $this->getOrderRepository();
+        $payment = $this->getPayment('USD', 15);
+        $createdOrder = $repo->create($payment);
+
+        $returnedOrder = $repo->get($createdOrder->id);
+
+        $this->assertInstanceOf(Order::class, $returnedOrder);
+        $this->assertEquals($createdOrder->id, $returnedOrder->id);
+        $this->assertEquals('USD', $returnedOrder->currency);
+        $this->assertEquals(15, $returnedOrder->amount);
+        $this->assertEquals($payment->getPaymentId(), $returnedOrder->vaniloPaymentId);
+    }
+
+    private function getOrderRepository(): OrderRepository
+    {
+        return new OrderRepository(
+            new FakePaypalClient()
+        );
     }
 }

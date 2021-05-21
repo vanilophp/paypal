@@ -16,7 +16,8 @@ namespace Vanilo\Paypal\Providers;
 
 use Konekt\Concord\BaseModuleServiceProvider;
 use Vanilo\Payment\PaymentGateways;
-use Vanilo\Paypal\Api\PaypalApi;
+use Vanilo\Paypal\Client\RealPaypalClient;
+use Vanilo\Paypal\Contracts\PaypalClient;
 use Vanilo\Paypal\PaypalPaymentGateway;
 
 class ModuleServiceProvider extends BaseModuleServiceProvider
@@ -25,8 +26,8 @@ class ModuleServiceProvider extends BaseModuleServiceProvider
     {
         parent::register();
 
-        $this->app->singleton(PaypalApi::class, function ($app) {
-            return new PaypalApi(
+        $this->app->singleton(PaypalClient::class, function ($app) {
+            return new RealPaypalClient(
                 $this->config('client_id'),
                 $this->config('secret'),
                 $this->config('sandbox'),

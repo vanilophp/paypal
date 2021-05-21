@@ -14,14 +14,14 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Concerns;
 
-use Vanilo\Paypal\Api\PaypalApi;
+use Vanilo\Paypal\Contracts\PaypalClient;
 
 trait InteractsWithPaypalApi
 {
-    private PaypalApi $api;
+    private PaypalClient $client;
 
-    public function __construct(PaypalApi $api)
+    public function __construct(PaypalClient $client)
     {
-        $this->api = $api;
+        $this->client = $client;
     }
 }

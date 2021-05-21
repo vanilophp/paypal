@@ -41,7 +41,7 @@ class PaypalOrderRepositoryTest extends TestCase
     }
 
     /** @test */
-    public function order_can_be_returned()
+    public function an_order_can_be_returned()
     {
         $repo = $this->getOrderRepository();
         $payment = $this->getPayment('USD', 15);

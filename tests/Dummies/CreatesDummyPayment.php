@@ -27,7 +27,7 @@ trait CreatesDummyPayment
             'amount' => $amount,
             'payable_type' => DummyOrder::class,
             'payable_id' => 1,
-            'payment_method_id' => $paymentMethodId ?? PaymentMethod::create(['name' => 'Ma', 'gateway' => 'g']),
+            'payment_method_id' => $paymentMethodId ?? PaymentMethod::create(['name' => 'PayPal', 'gateway' => 'paypal']),
         ]);
     }
 }

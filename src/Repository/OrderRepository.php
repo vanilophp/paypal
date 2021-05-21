@@ -56,14 +56,14 @@ class OrderRepository
             ]
         ], $applicationContext);
 
-        $response = $this->api->client->execute($orderCreateRequest);
+        $response = $this->client->execute($orderCreateRequest);
 
         return $this->orderFromPayload($response->result);
     }
 
     public function get(string $id): ?Order
     {
-        $response = $this->api->client->execute(new OrdersGetRequest($id));
+        $response = $this->client->execute(new OrdersGetRequest($id));
 
         if (200 !== $response->statusCode) {
             return null;
@@ -75,7 +75,7 @@ class OrderRepository
     public function capture(string $id): ?Order
     {
         try {
-            $response = $this->api->client->execute(new OrdersCaptureRequest($id));
+            $response = $this->client->execute(new OrdersCaptureRequest($id));
 
             if (201 !== $response->statusCode) {
                 return null;

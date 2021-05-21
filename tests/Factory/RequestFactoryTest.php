@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Tests\Factory;
 
+use PayPalHttp\HttpRequest;
 use Vanilo\Payment\Factories\PaymentFactory;
 use Vanilo\Payment\Models\PaymentMethod;
-use Vanilo\Paypal\Api\PaypalApi;
 use Vanilo\Paypal\Factories\RequestFactory;
 use Vanilo\Paypal\Messages\PaypalPaymentRequest;
 use Vanilo\Paypal\PaypalPaymentGateway;
 use Vanilo\Paypal\Repository\OrderRepository;
 use Vanilo\Paypal\Tests\Dummies\CreatesDummyPayment;
 use Vanilo\Paypal\Tests\Dummies\Order;
+use Vanilo\Paypal\Tests\Fakes\FakePaypalClient;
 use Vanilo\Paypal\Tests\TestCase;
 
 class RequestFactoryTest extends TestCase
@@ -47,56 +48,43 @@ class RequestFactoryTest extends TestCase
     /** @test */
     public function it_replaces_parameters_in_the_return_and_cancel_urls()
     {
-        $factory = new RequestFactory(
-            '123456',
-            'secret',
-            '/return/{paymentId}',
-            '/cancel/{paymentId}',
-            true
-        );
-        $order = Order::create(['currency' => 'EUR', 'amount' => 50]);
-        $payment = PaymentFactory::createFromPayable($order, $this->method);
+        // My homegrown spy 🕵
+        $observed = new class {
+            public ?HttpRequest $request = null;
+            function observe($r) {
+                $this->request = $r;
+            }
+        };
 
-        $request = $factory->create($payment);
-
-        $this->assertEquals(
-            'http://localhost/return/' . $payment->getPaymentId(),
-            $request->getReturnUrl()
-        );
-
-        $this->assertEquals(
-            'http://localhost/cancel/' . $payment->getPaymentId(),
-            $request->getCancelUrl()
-        );
-    }
-
-    /** @test */
-    public function the_return_and_cancel_urls_can_be_passed_as_an_option_to_the_create_method()
-    {
-        $factory = new RequestFactory('0XC', 'secret', '', '', true);
+        $factory = new RequestFactory($this->getOrderRepository([$observed, 'observe']));
         $order = Order::create(['currency' => 'EUR', 'amount' => 90]);
         $payment = PaymentFactory::createFromPayable($order, $this->method);
 
-        $request = $factory->create($payment, [
+        $factory->create($payment, [
             'return_url' => '/pp/ret?pid={paymentId}',
             'cancel_url' => '/pp/cancel?pid={paymentId}'
         ]);
 
+        $this->assertInstanceOf(HttpRequest::class, $observed->request);
+
         $this->assertEquals(
             'http://localhost/pp/ret?pid=' . $payment->getPaymentId(),
-            $request->getReturnUrl()
+            $observed->request->body['application_context']['return_url']
         );
 
         $this->assertEquals(
             'http://localhost/pp/cancel?pid=' . $payment->getPaymentId(),
-            $request->getCancelUrl()
+            $observed->request->body['application_context']['cancel_url']
         );
     }
 
-    private function getOrderRepository(string $clientId = 'cid', string $secret = 'huhuhu'): OrderRepository
+    private function getOrderRepository(?callable $observer = null): OrderRepository
     {
-        return new OrderRepository(
-            new PaypalApi($clientId, $secret, true)
-        );
+        $client = new FakePaypalClient();
+        if (null !== $observer) {
+            $client->observeRequestWith($observer);
+        }
+
+        return new OrderRepository($client);
     }
 }

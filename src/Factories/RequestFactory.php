@@ -15,12 +15,15 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Factories;
 
 use Vanilo\Payment\Contracts\Payment;
+use Vanilo\Payment\Support\ReplacesPaymentUrlParameters;
 use Vanilo\Paypal\Messages\PaypalPaymentRequest;
 use Vanilo\Paypal\Models\Order;
 use Vanilo\Paypal\Repository\OrderRepository;
 
 final class RequestFactory
 {
+    use ReplacesPaymentUrlParameters;
+
     private OrderRepository $orderRepository;
 
     public function __construct(OrderRepository $orderRepository)
@@ -30,7 +33,10 @@ final class RequestFactory
 
     public function create(Payment $payment, array $options = []): PaypalPaymentRequest
     {
-        $paypalOrder = $this->getPaypalOrder($payment, $options['return_url'] ?? null, $options['cancel_url'] ?? null);
+        $paypalOrder = $this->getPaypalOrder($payment,
+            $this->url($payment, $options, 'return'),
+            $this->url($payment, $options, 'cancel'),
+        );
         $result = new PaypalPaymentRequest($paypalOrder->links->approve);
 
         if (isset($options['view'])) {
@@ -47,5 +53,16 @@ final class RequestFactory
         }
 
         return $this->orderRepository->create($payment, $returnUrl, $cancelUrl);
+    }
+
+    private function url(Payment $payment, array $options, string $which): ?string
+    {
+        $url = $options["{$which}_url"] ?? null;
+
+        if (null !== $url) {
+            $url = $this->replaceUrlParameters($url, $payment);
+        }
+
+        return $url;
     }
 }
