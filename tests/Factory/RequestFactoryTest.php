@@ -99,7 +99,5 @@ class RequestFactoryTest extends TestCase
         $factory->create($payment);
 
         $this->assertEquals($observed->response->result->id, $payment->fresh()->remote_id);
-
-
     }
 }
