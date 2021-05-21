@@ -18,6 +18,7 @@ use Konekt\Concord\BaseModuleServiceProvider;
 use Vanilo\Payment\PaymentGateways;
 use Vanilo\Paypal\Client\RealPaypalClient;
 use Vanilo\Paypal\Contracts\PaypalClient;
+use Vanilo\Paypal\Factories\ResponseFactory;
 use Vanilo\Paypal\PaypalPaymentGateway;
 
 class ModuleServiceProvider extends BaseModuleServiceProvider
@@ -33,6 +34,10 @@ class ModuleServiceProvider extends BaseModuleServiceProvider
                 $this->config('sandbox'),
             );
         });
+
+        $this->app->when(ResponseFactory::class)
+            ->needs('$autoCapture')
+            ->give((bool) $this->config('auto_capture_approved_orders'));
     }
 
     public function boot()

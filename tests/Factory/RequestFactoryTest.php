@@ -10,15 +10,15 @@ use Vanilo\Payment\Models\PaymentMethod;
 use Vanilo\Paypal\Factories\RequestFactory;
 use Vanilo\Paypal\Messages\PaypalPaymentRequest;
 use Vanilo\Paypal\PaypalPaymentGateway;
-use Vanilo\Paypal\Repository\OrderRepository;
 use Vanilo\Paypal\Tests\Dummies\CreatesDummyPayment;
+use Vanilo\Paypal\Tests\Dummies\InteractsWithFakeOrderRepository;
 use Vanilo\Paypal\Tests\Dummies\Order;
-use Vanilo\Paypal\Tests\Fakes\FakePaypalClient;
 use Vanilo\Paypal\Tests\TestCase;
 
 class RequestFactoryTest extends TestCase
 {
     use CreatesDummyPayment;
+    use InteractsWithFakeOrderRepository;
 
     private PaymentMethod $method;
 
@@ -78,15 +78,5 @@ class RequestFactoryTest extends TestCase
             'http://localhost/pp/cancel?pid=' . $payment->getPaymentId(),
             $observed->request->body['application_context']['cancel_url']
         );
-    }
-
-    private function getOrderRepository(?callable $observer = null): OrderRepository
-    {
-        $client = new FakePaypalClient();
-        if (null !== $observer) {
-            $client->observeRequestWith($observer);
-        }
-
-        return new OrderRepository($client);
     }
 }

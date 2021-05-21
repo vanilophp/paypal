@@ -16,11 +16,14 @@ namespace Vanilo\Paypal\Tests\Fakes;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
 use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
 use PayPalCheckoutSdk\Orders\OrdersGetRequest;
 use PayPalHttp\HttpRequest;
 use PayPalHttp\HttpResponse;
 use Vanilo\Paypal\Contracts\PaypalClient;
+use Vanilo\Paypal\Models\Order;
+use Vanilo\Paypal\Models\PaypalOrderStatus;
 use Vanilo\Support\Generators\NanoIdGenerator;
 
 /**
@@ -33,6 +36,8 @@ class FakePaypalClient implements PaypalClient
     private array $data = [];
 
     private $observer = null;
+
+    private NanoIdGenerator $nanoId;
 
     public function __construct()
     {
@@ -53,6 +58,11 @@ class FakePaypalClient implements PaypalClient
     public function observeRequestWith(callable $observer): void
     {
         $this->observer = $observer;
+    }
+
+    public function simulateOrderApproval(string $id): void
+    {
+        $this->changeOrderStatus($id, PaypalOrderStatus::APPROVED());
     }
 
     private function ordersCreate(OrdersCreateRequest $request): HttpResponse
@@ -123,6 +133,63 @@ class FakePaypalClient implements PaypalClient
         return $this->createResponse(200, $this->data['orders'][$id]);
     }
 
+    private function ordersCapture(OrdersCaptureRequest $request): HttpResponse
+    {
+        // Path looks like: "/v2/checkout/orders/LVDE0MUTB6NX7DP9R/capture?"
+        preg_match("/.*\/orders\/([0-9A-Z]*)\/captur.*/", $request->path, $matches);
+        $id = $matches[1];
+
+        $this->changeOrderStatus($id, PaypalOrderStatus::COMPLETED());
+
+        $amount = $this->data['orders'][$id]['purchase_units'][0]['amount'];
+        $paymentId = $this->nanoId->generate();
+        $this->data['orders'][$id]['payments']['captures'] = [
+            [
+                'id' => $paymentId,
+                'status' => 'COMPLETED',
+                'amount' => $amount,
+                'final_capture' => true,
+                'seller_protection' => [
+                    'status' => 'ELIGIBLE',
+                    'dispute_categories' => ["ITEM_NOT_RECEIVED", "UNAUTHORIZED_TRANSACTION"]
+                ],
+                'seller_receivable_breakdown' => [
+                    'gross_amount' => $amount,
+                    'paypal_fee' => [
+                        'currency_code' => $amount['currency_code'],
+                        'value' => sprintf('%.2f', floatval($amount['value']) * 0.0054),
+                    ],
+                    'net_amount' => [
+                        'currency_code' => $amount['currency_code'],
+                        'value' => sprintf('%.2f', floatval($amount['value']) * 0.9946),
+                    ],
+                ],
+                'custom_id' => $this->data['orders'][$id]['purchase_units'][0]['custom_id'],
+                'links' => [
+                    [
+                        'href' => "https://api.sandbox.paypal.com/v2/payments/captures/$paymentId",
+                        'rel' => "self",
+                        'method' => "GET"
+                    ],
+                    [
+                        'href' => "https://api.sandbox.paypal.com/v2/payments/captures/$paymentId/refund",
+                        'rel' => "refund",
+                        'method' => "POST"
+                    ],
+                    [
+                        'href' => "https://api.sandbox.paypal.com/v2/checkout/orders/$id",
+                        'rel' => "up",
+                        'method' => "GET"
+                    ],
+                ],
+                'create_time' => Carbon::now('UTC')->toIso8601String(),
+                'update_time' => Carbon::now('UTC')->toIso8601String(),
+            ]
+        ];
+
+        return $this->createResponse(201, $this->data['orders'][$id]);
+    }
+
     private function unknownRequest(HttpRequest $httpRequest): HttpResponse
     {
         throw new \LogicException("Fake Paypal Client: don't know how to handle " . get_class($httpRequest));
@@ -143,5 +210,12 @@ class FakePaypalClient implements PaypalClient
         $prefers = $httpRequest->headers['Prefer'] ?? '';
 
         return 'return=representation' === strtolower($prefers);
+    }
+
+    private function changeOrderStatus(string $id, PaypalOrderStatus $newStatus): void
+    {
+        if (isset($this->data['orders'][$id])) {
+            $this->data['orders'][$id]['status'] = $newStatus->value();
+        }
     }
 }

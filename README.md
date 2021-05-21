@@ -15,3 +15,10 @@ Laravel Applications.
 ## Documentation
 
 Refer to the markdown files in the [docs](docs/) folder.
+
+## To-do
+
+- [ ] Implement Webhook Handler and/or unify response handling (webhook and frontend returns)
+- [ ] Handle partial payments (via payments/captures)
+- [ ] Auto-register webhooks
+- [ ] Handle refunds (via Payments API)

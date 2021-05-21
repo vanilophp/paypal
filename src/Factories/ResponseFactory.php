@@ -26,33 +26,41 @@ final class ResponseFactory
 {
     private OrderRepository $orderRepository;
 
-    public function __construct(OrderRepository $orderRepository)
+    private bool $autoCapture;
+
+    public function __construct(OrderRepository $orderRepository, bool $autoCapture = true)
     {
         $this->orderRepository = $orderRepository;
+        $this->autoCapture = $autoCapture;
     }
 
     public function createFromRequest(Request $request): PaypalPaymentResponse
     {
         $paypalOrderId = $request->get('token');
 
-        $paypalOrder = $this->orderRepository->get($paypalOrderId);
-        $payment = $this->findPayment($paypalOrder);
+        $order = $this->orderRepository->get($paypalOrderId);
+        $payment = $this->findPayment($order);
         if (null === $payment) {
             throw new PaymentNotFoundException("No matching payment was found for PayPal order `$paypalOrderId`");
         }
 
-        $amountPaid = null;
-        if ($paypalOrder->status->isApproved() || $paypalOrder->status->isCompleted()) {
-            $amountPaid = $paypalOrder->amount;
+        if ($order->status->isApproved() && $this->autoCapture) {
+            $order = $this->orderRepository->capture($order->id);
         }
 
-        return new PaypalPaymentResponse($payment->getPaymentId(), $paypalOrder->status, $amountPaid);
+        $amountPaid = null;
+        if ($order->status->isApproved() || $order->status->isCompleted()) {
+            /** @todo Take this amount precisely from the payments data */
+            $amountPaid = $order->amount;
+        }
+
+        return new PaypalPaymentResponse($payment->getPaymentId(), $order->status, $amountPaid);
     }
 
     private function findPayment(Order $paypalOrder): ?Payment
     {
         if (null !== $paypalOrder->vaniloPaymentId) {
-            if ($payment = PaymentProxy::find($paypalOrder->vaniloPaymentId)) {
+            if ($payment = PaymentProxy::findByHash($paypalOrder->vaniloPaymentId)) {
                 return $payment;
             }
         }

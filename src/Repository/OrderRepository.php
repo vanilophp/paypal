@@ -75,7 +75,9 @@ class OrderRepository
     public function capture(string $id): ?Order
     {
         try {
-            $response = $this->client->execute(new OrdersCaptureRequest($id));
+            $request = new OrdersCaptureRequest($id);
+            $request->prefer('return=representation');
+            $response = $this->client->execute($request);
 
             if (201 !== $response->statusCode) {
                 return null;
