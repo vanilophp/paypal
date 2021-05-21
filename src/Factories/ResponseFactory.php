@@ -36,7 +36,7 @@ final class ResponseFactory
 
     public function createFromRequest(Request $request): PaypalPaymentResponse
     {
-        $paypalOrderId = $this->fetchPaypalOrderId($request);
+        [$paypalOrderId, $message] = $this->fetchPaypalOrderId($request);
 
         $order = $this->orderRepository->get($paypalOrderId);
         $payment = $this->findPayment($order);
@@ -44,6 +44,7 @@ final class ResponseFactory
             throw new PaymentNotFoundException("No matching payment was found for PayPal order `$paypalOrderId`");
         }
 
+        // @todo log `authorized` status/message before capturing
         if ($order->status->isApproved() && $this->autoCapture) {
             $order = $this->orderRepository->capture($order->id);
         }
@@ -54,7 +55,7 @@ final class ResponseFactory
             $amountPaid = $order->amount;
         }
 
-        return new PaypalPaymentResponse($payment->getPaymentId(), $order->status, $amountPaid);
+        return new PaypalPaymentResponse($payment->getPaymentId(), $order->status, $amountPaid, $message);
     }
 
     private function findPayment(Order $paypalOrder): ?Payment
@@ -69,13 +70,13 @@ final class ResponseFactory
         return PaymentProxy::findByRemoteId($paypalOrder->id);
     }
 
-    private function fetchPaypalOrderId(Request $request): string
+    private function fetchPaypalOrderId(Request $request): array
     {
         if ($request->has('token')) {
-            return $request->get('token');// Frontend
+            return [$request->get('token'), null];// Frontend
         }
 
         // Webhook
-        return $request->json('resource.id');
+        return [$request->json('resource.id'), $request->json('summary')];
     }
 }

@@ -30,11 +30,14 @@ class PaypalPaymentResponse implements PaymentResponse
 
     private ?PaymentStatus $status = null;
 
-    public function __construct(string $paymentId, PaypalOrderStatus $nativeStatus, ?float $amountPaid)
+    private ?string $message;
+
+    public function __construct(string $paymentId, PaypalOrderStatus $nativeStatus, ?float $amountPaid, ?string $message = null)
     {
         $this->paymentId = $paymentId;
         $this->nativeStatus = $nativeStatus;
         $this->amountPaid = $amountPaid;
+        $this->message = $message;
     }
 
     public function wasSuccessful(): bool
@@ -44,7 +47,7 @@ class PaypalPaymentResponse implements PaymentResponse
 
     public function getMessage(): string
     {
-        return $this->nativeStatus->label();
+        return $this->message ?? $this->nativeStatus->label();
     }
 
     public function getTransactionId(): ?string

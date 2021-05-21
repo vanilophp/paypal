@@ -22,6 +22,9 @@ Refer to the markdown files in the [docs](docs/) folder.
 - [ ] Fetch the correct transaction id
 - [ ] Log webhook/return facts in payment history
 - [ ] Log auth before capture
+- [ ] Test a situation when the amount is higher than the test accounts available credit
+- [ ] Distinguish order and payment webhooks (resource.id differs!)
+- [X] Properly process messages from requests (webhook and frontend)
 - [ ] Handle the case when neither webhooks are set up, nor front return happens:
     - [ ] timeout?
     - [ ] captured already?
