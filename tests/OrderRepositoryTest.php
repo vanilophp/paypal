@@ -20,11 +20,12 @@ use Vanilo\Paypal\Models\Order;
 use Vanilo\Paypal\Models\PaypalOrderStatus;
 use Vanilo\Paypal\Repository\OrderRepository;
 use Vanilo\Paypal\Tests\Dummies\CreatesDummyPayment;
-use Vanilo\Paypal\Tests\Fakes\FakePaypalClient;
+use Vanilo\Paypal\Tests\Dummies\InteractsWithFakeOrderRepository;
 
 class OrderRepositoryTest extends TestCase
 {
     use CreatesDummyPayment;
+    use InteractsWithFakeOrderRepository;
 
     /** @test */
     public function the_real_paypal_client_gets_injected_by_the_container()
@@ -72,10 +73,22 @@ class OrderRepositoryTest extends TestCase
         $this->assertEquals($payment->getPaymentId(), $returnedOrder->vaniloPaymentId);
     }
 
-    private function getOrderRepository(): OrderRepository
+    /** @test */
+    public function the_payments_collection_gets_populated_for_captured_orders()
     {
-        return new OrderRepository(
-            new FakePaypalClient()
-        );
+        $orderRepository = $this->getOrderRepository();
+        $payment = $this->getPayment('EUR', 19.35);
+        $order = $orderRepository->create($payment);
+
+        $this->fakePaypalClient->simulateOrderApproval($order->id);
+        $order = $orderRepository->capture($order->id);
+
+        $this->assertTrue($order->hasPayments());
+        $this->assertCount(1, $order->payments());
+        $firstPayment = $order->payments()[0];
+        $this->assertNotNull($firstPayment->id);
+        $this->assertEquals(19.35, $firstPayment->amount);
+        $this->assertEquals('EUR', $firstPayment->currency);
+        $this->assertTrue($firstPayment->isFinalCapture);
     }
 }

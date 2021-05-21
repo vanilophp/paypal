@@ -36,7 +36,8 @@ final class ResponseFactory
 
     public function createFromRequest(Request $request): PaypalPaymentResponse
     {
-        [$paypalOrderId, $message] = $this->fetchPaypalOrderId($request);
+        $transactionId = null;
+        [$paypalOrderId, $message] = $this->processRequest($request);
 
         $order = $this->orderRepository->get($paypalOrderId);
         $payment = $this->findPayment($order);
@@ -55,7 +56,11 @@ final class ResponseFactory
             $amountPaid = $order->amount;
         }
 
-        return new PaypalPaymentResponse($payment->getPaymentId(), $order->status, $amountPaid, $message);
+        if ($order->hasPayments()) {
+            $transactionId = $order->payments()[0]->id;
+        }
+
+        return new PaypalPaymentResponse($payment->getPaymentId(), $order->status, $amountPaid, $message, $transactionId);
     }
 
     private function findPayment(Order $paypalOrder): ?Payment
@@ -70,7 +75,7 @@ final class ResponseFactory
         return PaymentProxy::findByRemoteId($paypalOrder->id);
     }
 
-    private function fetchPaypalOrderId(Request $request): array
+    private function processRequest(Request $request): array
     {
         if ($request->has('token')) {
             return [$request->get('token'), null];// Frontend

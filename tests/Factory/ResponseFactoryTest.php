@@ -55,4 +55,19 @@ class ResponseFactoryTest extends TestCase
         $order = $repo->get($order->id);
         $this->assertEquals(PaypalOrderStatus::APPROVED, $order->status->value());
     }
+
+    /** @test */
+    public function it_uses_the_paypal_payment_id_as_transaction_id()
+    {
+        $repo = $this->getOrderRepository();
+        $order = $repo->create($this->getPayment('USD', 11.30));
+        $this->fakePaypalClient->simulateOrderApproval($order->id);
+
+        $factory = new ResponseFactory($repo, true);
+        $request = new Request(['token' => $order->id]);
+        $paymentResponse = $factory->createFromRequest($request);
+
+        $order = $repo->get($order->id);
+        $this->assertEquals($order->payments()[0]->id, $paymentResponse->getTransactionId());
+    }
 }

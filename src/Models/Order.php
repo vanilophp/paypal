@@ -28,6 +28,8 @@ final class Order
 
     public ?string $vaniloPaymentId = null;
 
+    private array $payments = [];
+
     public function __construct(string $id, ?PaypalOrderStatus $status, float $amount, string $currency)
     {
         $this->id = $id;
@@ -35,5 +37,21 @@ final class Order
         $this->links = new Links();
         $this->amount = $amount;
         $this->currency = $currency;
+    }
+
+    public function hasPayments(): bool
+    {
+        return !empty($this->payments);
+    }
+
+    /** @return Payment[] */
+    public function payments(): array
+    {
+        return $this->payments;
+    }
+
+    public function addPayment(Payment $payment): void
+    {
+        $this->payments[] = $payment;
     }
 }

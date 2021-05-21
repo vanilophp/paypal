@@ -24,6 +24,7 @@ use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Paypal\Concerns\InteractsWithPaypalApi;
 use Vanilo\Paypal\Exceptions\OrderNotApprovedException;
 use Vanilo\Paypal\Models\Order;
+use Vanilo\Paypal\Models\Payment as PaypalPayment;
 use Vanilo\Paypal\Models\PaypalOrderStatus;
 
 class OrderRepository
@@ -121,6 +122,20 @@ class OrderRepository
                 if (property_exists($result->links, $link->rel)) {
                     $result->links->{$link->rel} = $link->href;
                 }
+            }
+        }
+
+        if (property_exists($payload, 'payments') && property_exists($payload->payments, 'captures')) {
+            foreach ($payload->payments->captures as $capture) {
+                $result->addPayment(
+                    new PaypalPayment(
+                        $capture->id,
+                        $capture->status,
+                        $capture->amount->value,
+                        $capture->amount->currency_code,
+                        $capture->final_capture,
+                    )
+                );
             }
         }
 
