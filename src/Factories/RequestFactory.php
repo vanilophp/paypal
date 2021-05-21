@@ -33,7 +33,8 @@ final class RequestFactory
 
     public function create(Payment $payment, array $options = []): PaypalPaymentRequest
     {
-        $paypalOrder = $this->getPaypalOrder($payment,
+        $paypalOrder = $this->getPaypalOrder(
+            $payment,
             $this->url($payment, $options, 'return'),
             $this->url($payment, $options, 'cancel'),
         );

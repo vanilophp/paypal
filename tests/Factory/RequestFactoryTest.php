@@ -49,9 +49,11 @@ class RequestFactoryTest extends TestCase
     public function it_replaces_parameters_in_the_return_and_cancel_urls()
     {
         // My homegrown spy 🕵
-        $observed = new class {
+        $observed = new class() {
             public ?HttpRequest $request = null;
-            function observe($r) {
+
+            public function observe($r)
+            {
                 $this->request = $r;
             }
         };
