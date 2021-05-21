@@ -22,7 +22,6 @@ use PayPalCheckoutSdk\Orders\OrdersGetRequest;
 use PayPalHttp\HttpRequest;
 use PayPalHttp\HttpResponse;
 use Vanilo\Paypal\Contracts\PaypalClient;
-use Vanilo\Paypal\Models\Order;
 use Vanilo\Paypal\Models\PaypalOrderStatus;
 use Vanilo\Support\Generators\NanoIdGenerator;
 
