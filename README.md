@@ -18,7 +18,13 @@ Refer to the markdown files in the [docs](docs/) folder.
 
 ## To-do
 
-- [ ] Implement Webhook Handler and/or unify response handling (webhook and frontend returns)
+- [ ] Save remote id of the order in payments table
+- [ ] Fetch the correct transaction id
+- [ ] Log webhook/return facts in payment history
+- [ ] Log auth before capture
+- [ ] Handle the case when neither webhooks are set up, nor front return happens:
+    - [ ] timeout?
+    - [ ] captured already?
 - [ ] Handle partial payments (via payments/captures)
 - [ ] Auto-register webhooks
 - [ ] Handle refunds (via Payments API)
