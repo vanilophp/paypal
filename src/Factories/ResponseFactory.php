@@ -36,7 +36,7 @@ final class ResponseFactory
 
     public function createFromRequest(Request $request): PaypalPaymentResponse
     {
-        $paypalOrderId = $request->get('token');
+        $paypalOrderId = $this->fetchPaypalOrderId($request);
 
         $order = $this->orderRepository->get($paypalOrderId);
         $payment = $this->findPayment($order);
@@ -67,5 +67,15 @@ final class ResponseFactory
 
         // Fallback to locating by Paypal id, as a second chance
         return PaymentProxy::findByRemoteId($paypalOrder->id);
+    }
+
+    private function fetchPaypalOrderId(Request $request): string
+    {
+        if ($request->has('token')) {
+            return $request->get('token');// Frontend
+        }
+
+        // Webhook
+        return $request->json('resource.id');
     }
 }
