@@ -154,7 +154,7 @@ class FakePaypalClient implements PaypalClient
 
         $amount = $this->data['orders'][$id]['purchase_units'][0]['amount'];
         $paymentId = $this->nanoId->generate();
-        $this->data['orders'][$id]['payments']['captures'] = [
+        $this->data['orders'][$id]['purchase_units'][0]['payments']['captures'] = [
             [
                 'id' => $paymentId,
                 'status' => 'COMPLETED',

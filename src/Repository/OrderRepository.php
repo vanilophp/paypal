@@ -125,8 +125,8 @@ class OrderRepository
             }
         }
 
-        if (property_exists($payload, 'payments') && property_exists($payload->payments, 'captures')) {
-            foreach ($payload->payments->captures as $capture) {
+        if (property_exists($purchaseUnit, 'payments') && property_exists($purchaseUnit->payments, 'captures')) {
+            foreach ($purchaseUnit->payments->captures as $capture) {
                 $result->addPayment(
                     new PaypalPayment(
                         $capture->id,

@@ -19,13 +19,15 @@ Refer to the markdown files in the [docs](docs/) folder.
 ## To-do
 
 - [ ] Fetch the correct transaction id
-- [ ] Log webhook/return facts in payment history
-- [ ] Log auth before capture
 - [ ] Test a situation when the amount is higher than the test accounts available credit
 - [ ] Distinguish order and payment webhooks (resource.id differs!)
+- [ ] Thrown custom exceptions on PayPal 4XX errors
 - [ ] Handle the case when neither webhooks are set up, nor front return happens:
     - [ ] timeout?
     - [ ] captured already?
+- [ ] Log webhook/return facts in payment history
+- [ ] Log auth before capture
+- [ ] Add payer and shipping data to the paypal order
 - [ ] Handle partial payments (via payments/captures)
 - [ ] Auto-register webhooks
 - [ ] Handle refunds (via Payments API)
