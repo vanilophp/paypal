@@ -131,9 +131,9 @@ class OrderRepository
                     new PaypalPayment(
                         $capture->id,
                         $capture->status,
-                        $capture->amount->value,
+                        floatval($capture->amount->value),
                         $capture->amount->currency_code,
-                        $capture->final_capture,
+                        (bool) $capture->final_capture,
                     )
                 );
             }
