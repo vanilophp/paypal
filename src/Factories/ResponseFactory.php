@@ -36,8 +36,10 @@ final class ResponseFactory
 
     public function createFromRequest(Request $request): PaypalPaymentResponse
     {
+        $rawResponse = StandardizedPaypalResponse::fromRequest($request);
+
         $transactionId = null;
-        [$paypalOrderId, $message] = $this->processRequest($request);
+        $paypalOrderId = $rawResponse->orderId();
 
         $order = $this->orderRepository->get($paypalOrderId);
         $payment = $this->findPayment($order);
@@ -46,6 +48,7 @@ final class ResponseFactory
         }
 
         // @todo log `authorized` status/message before capturing
+        // @todo move it out of here
         if ($order->status->isApproved() && $this->autoCapture) {
             $order = $this->orderRepository->capture($order->id);
         }
@@ -60,7 +63,13 @@ final class ResponseFactory
             $transactionId = $order->payments()[0]->id;
         }
 
-        return new PaypalPaymentResponse($payment->getPaymentId(), $order->status, $amountPaid, $message, $transactionId);
+        return new PaypalPaymentResponse(
+            $payment->getPaymentId(),
+            $order->status,
+            $this->makeResponseMessage($rawResponse, $order),
+            $amountPaid,
+            $transactionId
+        );
     }
 
     private function findPayment(Order $paypalOrder): ?Payment
@@ -75,13 +84,12 @@ final class ResponseFactory
         return PaymentProxy::findByRemoteId($paypalOrder->id);
     }
 
-    private function processRequest(Request $request): array
+    private function makeResponseMessage(StandardizedPaypalResponse $paypalResponse, Order $order): string
     {
-        if ($request->has('token')) {
-            return [$request->get('token'), null];// Frontend
-        }
-
-        // Webhook
-        return [$request->json('resource.id'), $request->json('summary')];
+        return sprintf(
+            '%s: %s',
+            ucfirst(strtolower($paypalResponse->source())),
+            $paypalResponse->message() ?? $order->status->label()
+        );
     }
 }

@@ -30,12 +30,17 @@ class PaypalPaymentResponse implements PaymentResponse
 
     private ?PaymentStatus $status = null;
 
-    private ?string $message;
+    private string $message;
 
     private ?string $transactionId;
 
-    public function __construct(string $paymentId, PaypalOrderStatus $nativeStatus, ?float $amountPaid, ?string $message = null, ?string $transactionId = null)
-    {
+    public function __construct(
+        string $paymentId,
+        PaypalOrderStatus $nativeStatus,
+        string $message,
+        ?float $amountPaid = null,
+        ?string $transactionId = null
+    ) {
         $this->paymentId = $paymentId;
         $this->nativeStatus = $nativeStatus;
         $this->amountPaid = $amountPaid;

@@ -18,10 +18,9 @@ Refer to the markdown files in the [docs](docs/) folder.
 
 ## To-do
 
-- [ ] Fetch the correct transaction id
-- [ ] Test a situation when the amount is higher than the test accounts available credit
 - [ ] Distinguish order and payment webhooks (resource.id differs!)
 - [ ] Thrown custom exceptions on PayPal 4XX errors
+- [ ] Test a situation when the amount is higher than the test accounts available credit
 - [ ] Handle the case when neither webhooks are set up, nor front return happens:
     - [ ] timeout?
     - [ ] captured already?
