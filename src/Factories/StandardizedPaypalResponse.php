@@ -13,6 +13,7 @@ declare(strict_types=1);
  */
 
 namespace Vanilo\Paypal\Factories;
+
 use Illuminate\Http\Request;
 
 /**
@@ -22,8 +23,8 @@ use Illuminate\Http\Request;
  */
 final class StandardizedPaypalResponse
 {
-    const SOURCE_WEBHOOK = 'webhook';
-    const SOURCE_FRONTEND = 'frontend';
+    public const SOURCE_WEBHOOK = 'webhook';
+    public const SOURCE_FRONTEND = 'frontend';
 
     private string $source;
 
