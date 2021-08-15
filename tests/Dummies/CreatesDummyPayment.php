@@ -20,7 +20,7 @@ use Vanilo\Paypal\Tests\Dummies\Order as DummyOrder;
 
 trait CreatesDummyPayment
 {
-    private function getPayment(string $currency = 'EUR', float $amount = 5, string $paymentMethodId = null): Payment
+    private function createDummyPayment(string $currency = 'EUR', float $amount = 5, string $paymentMethodId = null): Payment
     {
         return Payment::create([
             'currency' => $currency,

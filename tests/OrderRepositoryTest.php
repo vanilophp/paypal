@@ -45,7 +45,7 @@ class OrderRepositoryTest extends TestCase
     public function an_order_can_be_created()
     {
         $repo = $this->getOrderRepository();
-        $payment = $this->getPayment('EUR', 9.11);
+        $payment = $this->createDummyPayment('EUR', 9.11);
         $order = $repo->create($payment);
 
         $this->assertInstanceOf(Order::class, $order);
@@ -61,7 +61,7 @@ class OrderRepositoryTest extends TestCase
     public function order_can_be_returned()
     {
         $repo = $this->getOrderRepository();
-        $payment = $this->getPayment('USD', 15);
+        $payment = $this->createDummyPayment('USD', 15);
         $createdOrder = $repo->create($payment);
 
         $returnedOrder = $repo->get($createdOrder->id);
@@ -77,7 +77,7 @@ class OrderRepositoryTest extends TestCase
     public function the_payments_collection_gets_populated_for_captured_orders()
     {
         $orderRepository = $this->getOrderRepository();
-        $payment = $this->getPayment('EUR', 19.35);
+        $payment = $this->createDummyPayment('EUR', 19.35);
         $order = $orderRepository->create($payment);
 
         $this->fakePaypalClient->simulateOrderApproval($order->id);

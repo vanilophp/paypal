@@ -30,7 +30,7 @@ class ResponseFactoryTest extends TestCase
     public function it_captures_the_payment_if_auto_capture_is_enabled()
     {
         $repo = $this->getOrderRepository();
-        $order = $repo->create($this->getPayment('EUR', 29.50));
+        $order = $repo->create($this->createDummyPayment('EUR', 29.50));
         $this->fakePaypalClient->simulateOrderApproval($order->id);
 
         $factory = new ResponseFactory($repo, true);
@@ -45,7 +45,7 @@ class ResponseFactoryTest extends TestCase
     public function it_does_not_capture_the_payment_if_auto_capture_is_disabled()
     {
         $repo = $this->getOrderRepository();
-        $order = $repo->create($this->getPayment('EUR', 29.50));
+        $order = $repo->create($this->createDummyPayment('EUR', 29.50));
         $this->fakePaypalClient->simulateOrderApproval($order->id);
 
         $factory = new ResponseFactory($repo, false);
@@ -60,7 +60,7 @@ class ResponseFactoryTest extends TestCase
     public function it_uses_the_paypal_payment_id_as_transaction_id()
     {
         $repo = $this->getOrderRepository();
-        $order = $repo->create($this->getPayment('USD', 11.30));
+        $order = $repo->create($this->createDummyPayment('USD', 11.30));
         $this->fakePaypalClient->simulateOrderApproval($order->id);
 
         $factory = new ResponseFactory($repo, true);
