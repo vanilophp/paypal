@@ -2,6 +2,7 @@
     "name": "vanilo/paypal",
     "description": "PayPal Payment Gateway Support for Vanilo (Laravel)",
     "type": "library",
+    "keywords": ["laravel", "vanilo", "paypal", "payments"],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "license": "MIT",
@@ -19,11 +20,12 @@
         "issues": "https://github.com/vanilophp/paypal"
     },
     "require": {
-        "php": "^7.4|^8.0",
+        "php": "^8.0",
         "ext-json": "*",
-        "konekt/concord": "^1.5",
-        "vanilo/payment": "^2.2",
-        "vanilo/contracts": "^2.2",
+        "konekt/concord": "^1.10.2",
+        "laravel/framework": "^9.2",
+        "vanilo/payment": "^3.0",
+        "vanilo/contracts": "^3.0",
         "ext-dom": "*",
         "ext-openssl": "*",
         "ext-simplexml": "*",
@@ -36,8 +38,8 @@
     },
     "require-dev": {
         "ext-sqlite3": "*",
-        "orchestra/testbench": "~4.0|~5.0|~6.0",
-        "phpunit/phpunit" : "8 - 9"
+        "orchestra/testbench": "^7.0",
+        "phpunit/phpunit" : "9 - 10"
     },
     "autoload-dev": {
         "psr-4": {
