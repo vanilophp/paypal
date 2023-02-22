@@ -1,6 +1,6 @@
-# PayPal Payment Gateway Support for Vanilo
+# PayPal Payment Gateway for Vanilo
 
-[![Tests](https://img.shields.io/github/workflow/status/vanilophp/paypal/tests/master?style=flat-square)](https://github.com/vanilophp/paypal/actions?query=workflow%3Atests)
+[![Tests](https://img.shields.io/github/actions/workflow/status/vanilophp/paypal/tests.yml?branch=master&style=flat-square)](https://github.com/vanilophp/paypal/actions?query=workflow%3Atests)
 [![Packagist Stable Version](https://img.shields.io/packagist/v/vanilo/paypal.svg?style=flat-square&label=stable)](https://packagist.org/packages/vanilo/paypal)
 [![StyleCI](https://styleci.io/repos/344426533/shield?branch=master)](https://styleci.io/repos/344426533)
 [![Packagist downloads](https://img.shields.io/packagist/dt/vanilo/paypal.svg?style=flat-square)](https://packagist.org/packages/vanilo/paypal)
