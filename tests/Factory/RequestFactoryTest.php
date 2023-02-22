@@ -50,7 +50,7 @@ class RequestFactoryTest extends TestCase
     public function it_replaces_parameters_in_the_return_and_cancel_urls()
     {
         // My homegrown spy 🕵
-        $observed = new class() {
+        $observed = new class () {
             public ?HttpRequest $request = null;
 
             public function observe($r)
@@ -84,7 +84,7 @@ class RequestFactoryTest extends TestCase
     /** @test */
     public function it_saves_the_paypal_order_id_as_remote_id_in_the_payment()
     {
-        $observed = new class() {
+        $observed = new class () {
             public ?HttpResponse $response = null;
 
             public function observe($r)
