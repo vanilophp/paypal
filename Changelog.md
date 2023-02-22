@@ -1,7 +1,7 @@
 # Vanilo Paypal Module Changelog
 
-## Unreleased
-#### 2023-XX-YY
+## 1.0.0
+#### 2023-02-22
 
 - Added Vanilo 3 support
 - Added PHP 8.1 & 8.2 support
