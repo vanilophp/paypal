@@ -1,7 +1,8 @@
 # Vanilo Paypal Module Changelog
 
-## Unreleased
-##### 2021-XX-YY
+## 0.9.0
+##### 2023-02-22
 
-- Initial release
-- Requires Vanilo 2.2+
+- Works with Laravel 6-8
+- Works with PHP 7.4 and 8.0
+- Requires Vanilo v2.2
