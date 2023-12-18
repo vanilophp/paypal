@@ -80,7 +80,7 @@ class PaypalPaymentResponse implements PaymentResponse
                 case PaypalOrderStatus::CREATED:
                 case PaypalOrderStatus::SAVED:
                     $this->status = PaymentStatusProxy::PENDING();
-                break;
+                    break;
 
                 case PaypalOrderStatus::APPROVED:
                     $this->status = PaymentStatusProxy::AUTHORIZED();
