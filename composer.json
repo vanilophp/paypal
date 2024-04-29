@@ -22,8 +22,8 @@
     "require": {
         "php": "^8.2",
         "ext-json": "*",
-        "konekt/concord": "^1.10.2",
-        "laravel/framework": "^9.2|^10.0",
+        "konekt/concord": "^1.13",
+        "laravel/framework": "^10.0|^11.0",
         "vanilo/payment": "^3.0",
         "vanilo/contracts": "^3.0",
         "ext-dom": "*",
@@ -38,8 +38,8 @@
     },
     "require-dev": {
         "ext-sqlite3": "*",
-        "orchestra/testbench": "^7.0|^8.0",
-        "phpunit/phpunit" : "9 - 10"
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit" : "^10.0"
     },
     "autoload-dev": {
         "psr-4": {
