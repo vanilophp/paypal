@@ -21,6 +21,7 @@ use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Payment\Contracts\PaymentGateway;
 use Vanilo\Payment\Contracts\PaymentRequest;
 use Vanilo\Payment\Contracts\PaymentResponse;
+use Vanilo\Payment\Contracts\TransactionHandler;
 use Vanilo\Paypal\Concerns\HasPaypalConstructor;
 use Vanilo\Paypal\Exceptions\PaymentNotFoundException;
 use Vanilo\Paypal\Factories\RequestFactory;
@@ -31,6 +32,8 @@ class PaypalPaymentGateway implements PaymentGateway
     use HasPaypalConstructor;
 
     public const DEFAULT_ID = 'paypal';
+
+    private static ?string $svg = null;
 
     private ?RequestFactory $requestFactory = null;
 
@@ -65,6 +68,16 @@ class PaypalPaymentGateway implements PaymentGateway
         }
 
         return $this->responseFactory->createFromRequest($request);
+    }
+
+    public static function svgIcon(): string
+    {
+        return self::$svg ??= file_get_contents(__DIR__ . '/resources/logo.svg');
+    }
+
+    public function transactionHandler(): ?TransactionHandler
+    {
+        return null;
     }
 
     public function isOffline(): bool

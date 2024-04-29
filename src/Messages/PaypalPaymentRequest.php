@@ -50,4 +50,9 @@ class PaypalPaymentRequest implements PaymentRequest
 
         return $this;
     }
+
+    public function getRemoteId(): ?string
+    {
+        return null;
+    }
 }

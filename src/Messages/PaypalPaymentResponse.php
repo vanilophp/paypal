@@ -107,4 +107,9 @@ class PaypalPaymentResponse implements PaymentResponse
     {
         return $this->nativeStatus;
     }
+
+    public function getTransactionAmount(): float
+    {
+        return $this->amountPaid ?? 0;
+    }
 }
