@@ -29,7 +29,7 @@
         "ext-dom": "*",
         "ext-openssl": "*",
         "ext-simplexml": "*",
-        "paypal/paypal-checkout-sdk": "^1.0"
+        "paypal/paypal-checkout-sdk": "^1.0.2"
     },
     "autoload": {
         "psr-4": {
