@@ -1,5 +1,10 @@
 # Vanilo Paypal Module Changelog
 
+## Unreleased
+#### 2025-XX-YY
+
+- Added PHP 8.4 support
+
 ## 2.0.0
 #### 2024-04-29
 
