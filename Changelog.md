@@ -1,5 +1,13 @@
 # Vanilo Paypal Module Changelog
 
+## Unreleased
+#### 2025-XX-YY
+
+- Added Laravel 12 support
+- Added Vanilo 5 support
+- Dropped Vanilo 4 support
+- Dropped PHP 8.2 support
+
 ## 2.1.0
 #### 2025-04-01
 
