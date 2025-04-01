@@ -31,7 +31,7 @@ class OrderRepository
 {
     use InteractsWithPaypalApi;
 
-    public function create(Payment $payment, string $returnUrl = null, string $cancelUrl = null): Order
+    public function create(Payment $payment, ?string $returnUrl = null, string $cancelUrl = null): Order
     {
         $orderCreateRequest = new OrdersCreateRequest();
         $orderCreateRequest->prefer('return=representation');
