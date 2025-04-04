@@ -42,7 +42,7 @@ class OrderRepository
                 PurchaseUnitRequestBuilder::init(
                     AmountWithBreakdownBuilder::init(
                         $payment->getCurrency(),
-                        (string)$payment->getAmount()
+                        (string) $payment->getAmount()
                     )->build()
                 )->customId($payment->getPaymentId())->build(),
             ]
@@ -117,7 +117,7 @@ class OrderRepository
                         $capture->getStatus(),
                         floatval($capture->getAmount()->getValue()),
                         $capture->getAmount()->getCurrencyCode(),
-                        (bool)$capture->getFinalCapture(),
+                        (bool) $capture->getFinalCapture(),
                     )
                 );
             }

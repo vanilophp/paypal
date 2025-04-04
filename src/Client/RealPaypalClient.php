@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Client;
 
-use PayPalHttp\HttpRequest;
-use PayPalHttp\HttpResponse;
 use PaypalServerSdkLib\Authentication\ClientCredentialsAuthCredentialsBuilder;
 use PaypalServerSdkLib\Environment;
 use PaypalServerSdkLib\Http\ApiResponse;
@@ -40,6 +38,5 @@ class RealPaypalClient implements PaypalClient
     public function getOrder($number)
     {
         return $this->client->getOrdersController()->getOrder(['id' => $number]);
-
     }
 }

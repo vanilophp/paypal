@@ -28,10 +28,6 @@ use Vanilo\Paypal\Transaction\Handler;
 
 class PaypalPaymentGateway implements PaymentGateway
 {
-    public function __construct(readonly string $returnUrl, readonly string $cancelUrl)
-    {
-    }
-
     public const DEFAULT_ID = 'paypal';
 
     private static ?string $svg = null;
@@ -39,7 +35,9 @@ class PaypalPaymentGateway implements PaymentGateway
     private ?RequestFactory $requestFactory = null;
 
     private ?ResponseFactory $responseFactory = null;
-
+    public function __construct(readonly string $returnUrl, readonly string $cancelUrl)
+    {
+    }
 
     public function createPaymentRequest(Payment $payment, ?Address $shippingAddress = null, array $options = []): PaymentRequest
     {

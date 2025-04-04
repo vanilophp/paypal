@@ -12,7 +12,6 @@ use Vanilo\Payment\Contracts\TransactionNotCreated;
 
 class Handler implements TransactionHandler
 {
-
     public function supportsRefunds(): bool
     {
         return false;
