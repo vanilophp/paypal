@@ -38,7 +38,8 @@ final class RequestFactory
             $this->url($payment, $options, 'return'),
             $this->url($payment, $options, 'cancel'),
         );
-        $result = new PaypalPaymentRequest($paypalOrder->links->approve);
+
+        $result = new PaypalPaymentRequest($paypalOrder);
 
         if (isset($options['view'])) {
             $result->setView($options['view']);
@@ -49,15 +50,11 @@ final class RequestFactory
 
     private function getPaypalOrder(Payment $payment, ?string $returnUrl, ?string $cancelUrl): Order
     {
-        if (null !== $payment->remote_id) {
+        if (null !== $payment->getPayable()->getPayableRemoteId()) {
             return $this->orderRepository->get($payment->remote_id);
         }
 
-        $order = $this->orderRepository->create($payment, $returnUrl, $cancelUrl);
-        $payment->remote_id = $order->id;
-        $payment->save();
-
-        return $order;
+        return $this->orderRepository->create($payment, $returnUrl, $cancelUrl);
     }
 
     private function url(Payment $payment, array $options, string $which): ?string

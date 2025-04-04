@@ -14,10 +14,9 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Contracts;
 
-use PayPalHttp\HttpRequest;
-use PayPalHttp\HttpResponse;
+use PaypalServerSdkLib\Http\ApiResponse;
+use PaypalServerSdkLib\Models\OrderRequest;
 
 interface PaypalClient
 {
-    public function execute(HttpRequest $httpRequest): HttpResponse;
 }

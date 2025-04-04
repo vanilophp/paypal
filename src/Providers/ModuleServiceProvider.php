@@ -31,7 +31,7 @@ class ModuleServiceProvider extends BaseModuleServiceProvider
             return new RealPaypalClient(
                 $this->config('client_id'),
                 $this->config('secret'),
-                $this->config('sandbox'),
+                $this->config('sandbox', true),
             );
         });
 
@@ -54,11 +54,8 @@ class ModuleServiceProvider extends BaseModuleServiceProvider
         if ($this->config('bind', true)) {
             $this->app->bind(PaypalPaymentGateway::class, function ($app) {
                 return new PaypalPaymentGateway(
-                    $this->config('client_id'),
-                    $this->config('secret'),
                     $this->config('return_url'),
-                    $this->config('cancel_url'),
-                    $this->config('sandbox')
+                    $this->config('cancel_url', ''),
                 );
             });
         }
