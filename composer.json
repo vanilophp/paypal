@@ -29,7 +29,7 @@
         "laravel/framework": "^10.48|^11.0|^12.0",
         "vanilo/payment": "^5.0",
         "vanilo/contracts": "^5.0",
-        "paypal/paypal-checkout-sdk": "^1.0.2"
+        "paypal/paypal-server-sdk": "1.0.0"
     },
     "autoload": {
         "psr-4": {
