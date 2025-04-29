@@ -15,7 +15,7 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Repository;
 
 use Exception;
-use PayPalHttp\HttpException as PayPalHttpException;
+use PaypalServerSdkLib\Exceptions\ApiException;
 use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
 use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
 use PaypalServerSdkLib\Models\Builders\PurchaseUnitRequestBuilder;
@@ -64,33 +64,31 @@ class OrderRepository
         return $this->orderFromPayload($response->getResult());
     }
 
-    //public function get(string $id): ?Order
-    //{
-    //    $response = $this->client->execute(new OrdersGetRequest($id));
-    //
-    //    if (200 !== $response->statusCode) {
-    //        return null;
-    //    }
-    //
-    //    return $this->orderFromPayload($response->result);
-    //}
-    //
-    //public function capture(string $id): ?Order
-    //{
-    //    try {
-    //        $request = new OrdersCaptureRequest($id);
-    //        $request->prefer('return=representation');
-    //        $response = $this->client->execute($request);
-    //
-    //        if (201 !== $response->statusCode) {
-    //            return null;
-    //        }
-    //    } catch (PayPalHttpException $e) {
-    //        throw $this->convertException($e, $id);
-    //    }
-    //
-    //    return $this->orderFromPayload($response->result);
-    //}
+    public function get(string $id): ?Order
+    {
+       $response = $this->client->getOrder($id);
+
+       if (200 !== $response->getStatusCode()) {
+           return null;
+       }
+
+       return $this->orderFromPayload($response->getResult());
+    }
+
+    public function capture(string $id): ?Order
+    {
+       try {
+           $response = $this->client->captureOrder($id);
+
+           if (201 !== $response->getStatusCode()) {
+               return null;
+           }
+       } catch (ApiException $e) {
+           throw $this->convertException($e, $id);
+       }
+
+       return $this->orderFromPayload($response->getResult());
+    }
 
     private function orderFromPayload(RemoteOrder $order): Order
     {
@@ -98,7 +96,7 @@ class OrderRepository
 
         $result = new Order(
             $order->getId(),
-            PaypalOrderStatus::create($payload->status ?? null),
+            PaypalOrderStatus::create($order->getStatus() ?? null),
             floatval($purchaseUnit->getAmount()->getValue()),
             $purchaseUnit->getAmount()->getCurrencyCode(),
         );
@@ -126,16 +124,14 @@ class OrderRepository
         return $result;
     }
 
-    private function convertException(PayPalHttpException $e, string $id): Exception
+    // TOREVIEW
+    private function convertException(ApiException $e, string $id): Exception
     {
-        if (422 == $e->statusCode) {
+        if (422 == $e->getCode()) {
             $data = json_decode($e->getMessage(), true);
             $details = $data['details'][0] ?? null;
             if (null !== $details && 'ORDER_NOT_APPROVED' === $details['issue']) {
-                return new OrderNotApprovedException(
-                    $data['message'] ?? 'Order is not approved',
-                    ['paypal_order_id' => $id]
-                );
+                return new OrderNotApprovedException($data['message'] ?? "Order $id is not approved");
             }
         }
 

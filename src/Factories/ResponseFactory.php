@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Factories;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Payment\Models\PaymentProxy;
 use Vanilo\Paypal\Exceptions\PaymentNotFoundException;
@@ -47,11 +48,11 @@ final class ResponseFactory
             throw new PaymentNotFoundException("No matching payment was found for PayPal order `$paypalOrderId`");
         }
 
-        // @todo log `authorized` status/message before capturing
-        // @todo move it out of here
-        if ($order->status->isApproved() && $this->autoCapture) {
-            $order = $this->orderRepository->capture($order->id);
-        }
+        // // // @todo log `authorized` status/message before capturing
+        // // // @todo move it out of here
+        // if ($order->status->isApproved() && $this->autoCapture) {
+        //     $order = $this->orderRepository->capture($order->id);
+        // }
 
         $amountPaid = null;
         if ($order->status->isApproved() || $order->status->isCompleted()) {

@@ -35,8 +35,13 @@ class RealPaypalClient implements PaypalClient
         return $this->client->getOrdersController()->createOrder(['body' => $request, 'prefer' => 'return=representation']);
     }
 
-    public function getOrder($number)
+    public function getOrder($number): ApiResponse
     {
-        return $this->client->getOrdersController()->getOrder(['id' => $number]);
+        return $this->client->getOrdersController()->getOrder(['id' => $number, 'prefer' => 'return=representation']);
+    }
+
+    public function captureOrder($number): ApiResponse
+    {
+        return $this->client->getOrdersController()->captureOrder(['id' => $number, 'prefer' => 'return=representation']);
     }
 }
