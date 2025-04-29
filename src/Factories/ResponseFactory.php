@@ -47,7 +47,7 @@ final class ResponseFactory
         if (null === $payment) {
             throw new PaymentNotFoundException("No matching payment was found for PayPal order `$paypalOrderId`");
         }
-
+        //
         // // // @todo log `authorized` status/message before capturing
         // // // @todo move it out of here
         // if ($order->status->isApproved() && $this->autoCapture) {

@@ -22,6 +22,7 @@ use PaypalServerSdkLib\Models\Builders\PurchaseUnitRequestBuilder;
 use PaypalServerSdkLib\Models\CheckoutPaymentIntent;
 use PaypalServerSdkLib\Models\Order as RemoteOrder;
 use PaypalServerSdkLib\Models\OrderApplicationContext;
+use PaypalServerSdkLib\Models\OrderApplicationContextUserAction;
 use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Paypal\Contracts\PaypalClient;
 use Vanilo\Paypal\Exceptions\OrderNotApprovedException;
@@ -49,6 +50,7 @@ class OrderRepository
         )->build();
 
         $applicationContext = new OrderApplicationContext();
+        $applicationContext->setUserAction(OrderApplicationContextUserAction::PAY_NOW);
 
         if ($returnUrl) {
             $applicationContext->setReturnUrl($returnUrl);
