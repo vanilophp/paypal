@@ -31,7 +31,7 @@ class PaypalPaymentRequest implements PaymentRequest
         return View::make(
             $this->view,
             [
-                'url' => $this->order->links->approve,
+                'url' => $this->order->links->{"payer-action"},
                 'autoRedirect' => $options['autoRedirect'] ?? false,
             ]
         )->render();

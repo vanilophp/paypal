@@ -18,11 +18,13 @@ use Exception;
 use PaypalServerSdkLib\Exceptions\ApiException;
 use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
 use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
+use PaypalServerSdkLib\Models\Builders\PaymentSourceBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletExperienceContextBuilder;
 use PaypalServerSdkLib\Models\Builders\PurchaseUnitRequestBuilder;
 use PaypalServerSdkLib\Models\CheckoutPaymentIntent;
 use PaypalServerSdkLib\Models\Order as RemoteOrder;
-use PaypalServerSdkLib\Models\OrderApplicationContext;
-use PaypalServerSdkLib\Models\OrderApplicationContextUserAction;
+use PaypalServerSdkLib\Models\PaypalExperienceUserAction;
 use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Paypal\Contracts\PaypalClient;
 use Vanilo\Paypal\Exceptions\OrderNotApprovedException;
@@ -37,29 +39,32 @@ class OrderRepository
 
     public function create(Payment $payment, ?string $returnUrl = null, string $cancelUrl = null): Order
     {
+        $paymentSource = PaymentSourceBuilder::init()
+            ->paypal(
+                PaypalWalletBuilder::init()
+                    ->experienceContext(
+                        PaypalWalletExperienceContextBuilder::init()
+                            ->paymentMethodPreference('IMMEDIATE_PAYMENT_REQUIRED')
+                            ->returnUrl($returnUrl)
+                            ->cancelUrl($cancelUrl)
+                            ->userAction(PaypalExperienceUserAction::PAY_NOW)
+                            ->build()
+                )->build()
+            )->build();
+
         $orderCreateRequest = OrderRequestBuilder::init(
             CheckoutPaymentIntent::CAPTURE,
             [
                 PurchaseUnitRequestBuilder::init(
                     AmountWithBreakdownBuilder::init(
                         $payment->getCurrency(),
-                        (string) $payment->getAmount()
+                        (string)$payment->getAmount()
                     )->build()
                 )->customId($payment->getPaymentId())->build(),
             ]
-        )->build();
-
-        $applicationContext = new OrderApplicationContext();
-        $applicationContext->setUserAction(OrderApplicationContextUserAction::PAY_NOW);
-
-        if ($returnUrl) {
-            $applicationContext->setReturnUrl($returnUrl);
-        }
-        if ($cancelUrl) {
-            $applicationContext->setCancelUrl($cancelUrl);
-        }
-
-        $orderCreateRequest->setApplicationContext($applicationContext);
+        )
+            ->paymentSource($paymentSource)
+            ->build();
 
         $response = $this->client->createOrder($orderCreateRequest);
 
@@ -68,28 +73,28 @@ class OrderRepository
 
     public function get(string $id): ?Order
     {
-       $response = $this->client->getOrder($id);
+        $response = $this->client->getOrder($id);
 
-       if (200 !== $response->getStatusCode()) {
-           return null;
-       }
+        if (200 !== $response->getStatusCode()) {
+            return null;
+        }
 
-       return $this->orderFromPayload($response->getResult());
+        return $this->orderFromPayload($response->getResult());
     }
 
     public function capture(string $id): ?Order
     {
-       try {
-           $response = $this->client->captureOrder($id);
+        try {
+            $response = $this->client->captureOrder($id);
 
-           if (201 !== $response->getStatusCode()) {
-               return null;
-           }
-       } catch (ApiException $e) {
-           throw $this->convertException($e, $id);
-       }
+            if (201 !== $response->getStatusCode()) {
+                return null;
+            }
+        } catch (ApiException $e) {
+            throw $this->convertException($e, $id);
+        }
 
-       return $this->orderFromPayload($response->getResult());
+        return $this->orderFromPayload($response->getResult());
     }
 
     private function orderFromPayload(RemoteOrder $order): Order
@@ -117,7 +122,7 @@ class OrderRepository
                         $capture->getStatus(),
                         floatval($capture->getAmount()->getValue()),
                         $capture->getAmount()->getCurrencyCode(),
-                        (bool) $capture->getFinalCapture(),
+                        (bool)$capture->getFinalCapture(),
                     )
                 );
             }
