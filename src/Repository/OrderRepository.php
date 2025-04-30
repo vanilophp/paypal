@@ -61,7 +61,7 @@ class OrderRepository
 
         $orderCreateRequest->setApplicationContext($applicationContext);
 
-        $response = $this->client->execute($orderCreateRequest);
+        $response = $this->client->createOrder($orderCreateRequest);
 
         return $this->orderFromPayload($response->getResult());
     }

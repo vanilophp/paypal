@@ -30,7 +30,7 @@ class RealPaypalClient implements PaypalClient
             ->build();
     }
 
-    public function execute(OrderRequest $request): ApiResponse
+    public function createOrder(OrderRequest $request): ApiResponse
     {
         return $this->client->getOrdersController()->createOrder(['body' => $request, 'prefer' => 'return=representation']);
     }

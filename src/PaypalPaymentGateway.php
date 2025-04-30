@@ -35,6 +35,7 @@ class PaypalPaymentGateway implements PaymentGateway
     private ?RequestFactory $requestFactory = null;
 
     private ?ResponseFactory $responseFactory = null;
+
     public function __construct(readonly string $returnUrl, readonly string $cancelUrl)
     {
     }
