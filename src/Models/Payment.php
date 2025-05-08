@@ -18,7 +18,7 @@ final class Payment
 {
     public string $id;
 
-    public string $status;
+    public ?PaypalCaptureStatus $status;
 
     public float $amount;
 
@@ -26,10 +26,10 @@ final class Payment
 
     public bool $isFinalCapture;
 
-    public function __construct(string $id, string $status, float $amount, string $currency, bool $isFinalCapture)
+    public function __construct(string $id, ?PaypalCaptureStatus $status, float $amount, string $currency, bool $isFinalCapture)
     {
         $this->id = $id;
-        $this->status = $status;
+        $this->status = $status ?? new PaypalCaptureStatus();
         $this->amount = $amount;
         $this->currency = $currency;
         $this->isFinalCapture = $isFinalCapture;

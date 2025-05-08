@@ -37,40 +37,58 @@ final class ResponseFactory
 
     public function createFromRequest(Request $request): PaypalPaymentResponse
     {
-        $rawResponse = StandardizedPaypalResponse::fromRequest($request);
+        // event_type (https://developer.paypal.com/api/rest/webhooks/event-names/#orders)
+        //  CHECKOUT.ORDER.APPROVED -> can capture
+        //  PAYMENT.CAPTURE.PENDING -> this is what we receive continuosly
+        //  PAYMENT.CAPTURE.DECLINED
+        //  PAYMENT.CAPTURE.COMPLETED
+        //  PAYMENT.CAPTURE.REFUNDED
 
-        $transactionId = null;
-        $paypalOrderId = $rawResponse->orderId();
+        // ->capture()
+        // returns with status of COMPLETED
+        // but the payment.captures[0].status == "PENDING"
+        // so in fact we need to wait for "PAYMENT.CAPTURE.COMPLETED" webhook...
+
+        // !!! GET ORDER & CAPTURE
+        // if order status == 'COMPLETED' doesn't mean that the payment was captured
+        // (it just means that:
+        //      - the payment was created
+        //      - the intent was completed (but it can be in any of the following states: pending, completed, declined)
+        //)
+        // we have to look into 'purchase_units[0].payments.captures[0].status' for the proper status...
+        // This is also true for the processing of the capture response (which returns also an order)
+        //
+        // It seems we need to use the order->payments->status
+        //
+        // ORDER Completed can mean:
+        // https://developer.paypal.com/docs/api/orders/v2/
+        // "The intent of the order was completed and a payments resource was created.
+        // Important: Check the payment status in purchase_units[].payments.captures[].status before fulfilling the order.
+        // A completed order can indicate a payment was authorized, an authorized payment was captured,
+        // or a payment was declined."
+
+
+        $standardizedPaypalResponse = StandardizedPaypalResponse::fromRequest($request);
+
+        $paypalOrderId = $standardizedPaypalResponse->orderId();
 
         $order = $this->orderRepository->get($paypalOrderId);
         $payment = $this->findPayment($order);
         if (null === $payment) {
             throw new PaymentNotFoundException("No matching payment was found for PayPal order `$paypalOrderId`");
         }
-        
-        // // @todo log `authorized` status/message before capturing
-        // // @todo move it out of here
-        if ($order->status->isApproved() && $this->autoCapture) {
-            $order = $this->orderRepository->capture($order->id);
-        }
 
-        $amountPaid = null;
-        if ($order->status->isApproved() || $order->status->isCompleted()) {
-            /** @todo Take this amount precisely from the payments data */
-            $amountPaid = $order->amount;
+        switch ($standardizedPaypalResponse->eventType()) {
+            case 'CHECKOUT.ORDER.APPROVED':
+                // TODO: capture OR authorize
+                return $this->capturePayment($standardizedPaypalResponse, $order, $payment);
+            case 'PAYMENT.CAPTURE.PENDING':
+                return new PaypalPaymentResponse(
+                    $payment->getPaymentId(),
+                    $order->captureStatus,
+                    $this->makeResponseMessage($standardizedPaypalResponse, $order)
+                );
         }
-
-        if ($order->hasPayments()) {
-            $transactionId = $order->payments()[0]->id;
-        }
-
-        return new PaypalPaymentResponse(
-            $payment->getPaymentId(),
-            $order->status,
-            $this->makeResponseMessage($rawResponse, $order),
-            $amountPaid,
-            $transactionId
-        );
     }
 
     private function findPayment(Order $paypalOrder): ?Payment
@@ -91,6 +109,35 @@ final class ResponseFactory
             '%s: %s',
             ucfirst(strtolower($paypalResponse->source())),
             $paypalResponse->message() ?? $order->status->label()
+        );
+    }
+
+    private function capturePayment(StandardizedPaypalResponse $standardizedPaypalResponse, Order $order, Payment $payment): PaypalPaymentResponse
+    {
+        $transactionId = null;
+
+        // // @todo log `authorized` status/message before capturing
+        // // @todo move it out of here
+        if ($order->status->isApproved() && $this->autoCapture) {
+            $order = $this->orderRepository->capture($order->id);
+        }
+
+        $amountPaid = null;
+        if ($order->captureStatus->isCompleted()) {
+            /** @todo Take this amount precisely from the payments data */
+            $amountPaid = $order->amount;
+        }
+
+        if ($order->hasPayments()) {
+            $transactionId = $order->payments()[0]->id;
+        }
+
+        return new PaypalPaymentResponse(
+            $payment->getPaymentId(),
+            $order->captureStatus,
+            $this->makeResponseMessage($standardizedPaypalResponse, $order),
+            $amountPaid,
+            $transactionId
         );
     }
 }

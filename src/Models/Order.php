@@ -20,6 +20,8 @@ final class Order
 
     public PaypalOrderStatus $status;
 
+    public PaypalCaptureStatus $captureStatus;
+
     public Links $links;
 
     public float $amount;
@@ -30,10 +32,11 @@ final class Order
 
     private array $payments = [];
 
-    public function __construct(string $id, ?PaypalOrderStatus $status, float $amount, string $currency)
+    public function __construct(string $id, ?PaypalOrderStatus $status, ?PaypalCaptureStatus $captureStatus, float $amount, string $currency)
     {
         $this->id = $id;
         $this->status = $status ?? new PaypalOrderStatus();
+        $this->captureStatus = $captureStatus ?? new PaypalCaptureStatus();
         $this->links = new Links();
         $this->amount = $amount;
         $this->currency = $currency;

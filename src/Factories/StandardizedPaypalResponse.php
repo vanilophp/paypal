@@ -32,11 +32,14 @@ final class StandardizedPaypalResponse
 
     private string $orderId;
 
-    public function __construct(string $source, string $orderId, ?string $message = null)
+    private string $eventType;
+
+    public function __construct(string $source, string $orderId, ?string $eventType = null, ?string $message = null)
     {
         $this->source = $source;
         $this->message = $message;
         $this->orderId = $orderId;
+        $this->eventType = $eventType;
     }
 
     public static function fromRequest(Request $request): self
@@ -45,7 +48,19 @@ final class StandardizedPaypalResponse
             return new self(self::SOURCE_FRONTEND, $request->get('token'));
         }
 
-        return new self(self::SOURCE_WEBHOOK, $request->json('resource.id'), $request->json('summary'));
+        $orderId = self::resolveOrderId($request);
+
+        return new self(self::SOURCE_WEBHOOK, $orderId, $request->json('event_type'), $request->json('summary'));
+    }
+
+    private static function resolveOrderId(Request $request): string
+    {
+        switch ($request->json('event_type')) {
+            case 'PAYMENT.CAPTURE.PENDING':
+                return $request->json('resource.supplementary_data.related_ids.order_id');
+            default:
+                return $request->json('resource.id');
+        }
     }
 
     public function isWebhook(): bool
@@ -71,5 +86,10 @@ final class StandardizedPaypalResponse
     public function orderId(): string
     {
         return $this->orderId;
+    }
+
+    public function eventType(): string
+    {
+        return $this->eventType;
     }
 }

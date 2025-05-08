@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Repository;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use PaypalServerSdkLib\Exceptions\ApiException;
 use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
 use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
@@ -29,6 +30,7 @@ use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Paypal\Contracts\PaypalClient;
 use Vanilo\Paypal\Exceptions\OrderNotApprovedException;
 use Vanilo\Paypal\Models\Order;
+use Vanilo\Paypal\Models\PaypalCaptureStatus;
 use Vanilo\Paypal\Models\PaypalOrderStatus;
 
 class OrderRepository
@@ -101,9 +103,19 @@ class OrderRepository
     {
         $purchaseUnit = $order->getPurchaseUnits()[0];
 
+        // Here we suppose a single payment only!!!
+        $captureStatus = null;
+        if ($captures = $purchaseUnit->getPayments()?->getCaptures()) {
+            if ($captures) {
+                $capture = $captures[0];
+                $captureStatus = $capture->getStatus();
+            }
+        }
+
         $result = new Order(
             $order->getId(),
             PaypalOrderStatus::create($order->getStatus() ?? null),
+            PaypalCaptureStatus::create($captureStatus),
             floatval($purchaseUnit->getAmount()->getValue()),
             $purchaseUnit->getAmount()->getCurrencyCode(),
         );
@@ -114,12 +126,12 @@ class OrderRepository
             $result->links->{$link->getRel()} = $link->getHref();
         }
 
-        if ($captures = $purchaseUnit->getPayments()?->getCaptures()) {
+        if ($captures) {
             foreach ($captures as $capture) {
                 $result->addPayment(
                     new \Vanilo\Paypal\Models\Payment(
                         $capture->getId(),
-                        $capture->getStatus(),
+                        PaypalCaptureStatus::create($capture->getStatus() ?? null),
                         floatval($capture->getAmount()->getValue()),
                         $capture->getAmount()->getCurrencyCode(),
                         (bool)$capture->getFinalCapture(),
