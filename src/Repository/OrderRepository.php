@@ -15,7 +15,6 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Repository;
 
 use Exception;
-use Illuminate\Support\Facades\Log;
 use PaypalServerSdkLib\Exceptions\ApiException;
 use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
 use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
@@ -51,7 +50,7 @@ class OrderRepository
                             ->cancelUrl($cancelUrl)
                             ->userAction(PaypalExperienceUserAction::PAY_NOW)
                             ->build()
-                )->build()
+                    )->build()
             )->build();
 
         $orderCreateRequest = OrderRequestBuilder::init(
@@ -60,7 +59,7 @@ class OrderRepository
                 PurchaseUnitRequestBuilder::init(
                     AmountWithBreakdownBuilder::init(
                         $payment->getCurrency(),
-                        (string)$payment->getAmount()
+                        (string) $payment->getAmount()
                     )->build()
                 )->customId($payment->getPaymentId())->build(),
             ]
@@ -134,7 +133,7 @@ class OrderRepository
                         PaypalCaptureStatus::create($capture->getStatus() ?? null),
                         floatval($capture->getAmount()->getValue()),
                         $capture->getAmount()->getCurrencyCode(),
-                        (bool)$capture->getFinalCapture(),
+                        (bool) $capture->getFinalCapture(),
                     )
                 );
             }

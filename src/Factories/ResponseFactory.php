@@ -67,7 +67,6 @@ final class ResponseFactory
         // A completed order can indicate a payment was authorized, an authorized payment was captured,
         // or a payment was declined."
 
-
         $standardizedPaypalResponse = StandardizedPaypalResponse::fromRequest($request);
 
         $paypalOrderId = $standardizedPaypalResponse->orderId();
@@ -82,7 +81,7 @@ final class ResponseFactory
             case 'CHECKOUT.ORDER.APPROVED':
                 // TODO: capture OR authorize
                 return $this->capturePayment($standardizedPaypalResponse, $order, $payment);
-            // See: https://developer.paypal.com/api/rest/webhooks/event-names/
+                // See: https://developer.paypal.com/api/rest/webhooks/event-names/
             case 'PAYMENT.CAPTURE.COMPLETED':
                 $amountPaid = $order->amount;
                 $transactionId = $order->payments()[0]->id;

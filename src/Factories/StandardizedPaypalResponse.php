@@ -53,16 +53,6 @@ final class StandardizedPaypalResponse
         return new self(self::SOURCE_WEBHOOK, $orderId, $request->json('event_type'), $request->json('summary'));
     }
 
-    private static function resolveOrderId(Request $request): string
-    {
-        switch ($request->json('event_type')) {
-            case 'PAYMENT.CAPTURE.PENDING':
-                return $request->json('resource.supplementary_data.related_ids.order_id');
-            default:
-                return $request->json('resource.id');
-        }
-    }
-
     public function isWebhook(): bool
     {
         return self::SOURCE_WEBHOOK === $this->source;
@@ -91,5 +81,15 @@ final class StandardizedPaypalResponse
     public function eventType(): string
     {
         return $this->eventType;
+    }
+
+    private static function resolveOrderId(Request $request): string
+    {
+        switch ($request->json('event_type')) {
+            case 'PAYMENT.CAPTURE.PENDING':
+                return $request->json('resource.supplementary_data.related_ids.order_id');
+            default:
+                return $request->json('resource.id');
+        }
     }
 }
