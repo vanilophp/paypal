@@ -82,13 +82,27 @@ final class ResponseFactory
             case 'CHECKOUT.ORDER.APPROVED':
                 // TODO: capture OR authorize
                 return $this->capturePayment($standardizedPaypalResponse, $order, $payment);
+            // See: https://developer.paypal.com/api/rest/webhooks/event-names/
+            case 'PAYMENT.CAPTURE.COMPLETED':
+                $amountPaid = $order->amount;
+                $transactionId = $order->payments()[0]->id;
+                break;
             case 'PAYMENT.CAPTURE.PENDING':
-                return new PaypalPaymentResponse(
-                    $payment->getPaymentId(),
-                    $order->captureStatus,
-                    $this->makeResponseMessage($standardizedPaypalResponse, $order)
-                );
+            case 'PAYMENT.CAPTURE.DENIED':
+            case 'PAYMENT.CAPTURE.REFUNDED':
+            case 'PAYMENT.CAPTURE.REVERSED':
+                $transactionId = null;
+                $amountPaid = null;
+                break;
         }
+
+        return new PaypalPaymentResponse(
+            $payment->getPaymentId(),
+            $order->captureStatus,
+            $this->makeResponseMessage($standardizedPaypalResponse, $order),
+            $amountPaid,
+            $transactionId
+        );
     }
 
     private function findPayment(Order $paypalOrder): ?Payment
@@ -126,9 +140,6 @@ final class ResponseFactory
         if ($order->captureStatus->isCompleted()) {
             /** @todo Take this amount precisely from the payments data */
             $amountPaid = $order->amount;
-        }
-
-        if ($order->hasPayments()) {
             $transactionId = $order->payments()[0]->id;
         }
 
