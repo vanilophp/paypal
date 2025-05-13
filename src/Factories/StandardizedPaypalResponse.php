@@ -53,6 +53,22 @@ final class StandardizedPaypalResponse
         return new self(self::SOURCE_WEBHOOK, $orderId, $request->json('event_type'), $request->json('summary'));
     }
 
+    private static function resolveOrderId(Request $request): string
+    {
+        switch ($request->json('event_type')) {
+            // See: https://developer.paypal.com/api/rest/webhooks/event-names/
+            case 'PAYMENT.CAPTURE.PENDING':
+            case 'PAYMENT.CAPTURE.COMPLETED':
+            case 'PAYMENT.CAPTURE.DENIED':
+            case 'PAYMENT.CAPTURE.REFUNDED':
+            case 'PAYMENT.CAPTURE.REVERSED':
+                return $request->json('resource.supplementary_data.related_ids.order_id');
+            case 'CHECKOUT.ORDER.APPROVED':
+            default:
+                return $request->json('resource.id');
+        }
+    }
+
     public function isWebhook(): bool
     {
         return self::SOURCE_WEBHOOK === $this->source;
@@ -81,31 +97,5 @@ final class StandardizedPaypalResponse
     public function eventType(): string
     {
         return $this->eventType;
-    }
-
-    private static function resolveOrderId(Request $request): string
-    {
-        switch ($request->json('event_type')) {
-            // See: https://developer.paypal.com/api/rest/webhooks/event-names/
-            case 'PAYMENT.CAPTURE.PENDING':
-            case 'PAYMENT.CAPTURE.COMPLETED':
-            case 'PAYMENT.CAPTURE.DENIED':
-            case 'PAYMENT.CAPTURE.REFUNDED':
-            case 'PAYMENT.CAPTURE.REVERSED':
-                return $request->json('resource.supplementary_data.related_ids.order_id');
-            case 'CHECKOUT.ORDER.APPROVED':
-            default:
-                return $request->json('resource.id');
-        }
-    }
-
-    private static function resolveOrderId(Request $request): string
-    {
-        switch ($request->json('event_type')) {
-            case 'PAYMENT.CAPTURE.PENDING':
-                return $request->json('resource.supplementary_data.related_ids.order_id');
-            default:
-                return $request->json('resource.id');
-        }
     }
 }
