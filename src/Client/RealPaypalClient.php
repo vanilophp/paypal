@@ -21,12 +21,6 @@ class RealPaypalClient implements PaypalClient
         $this->client = PaypalServerSdkClientBuilder::init()
             ->clientCredentialsAuthCredentials(ClientCredentialsAuthCredentialsBuilder::init($clientId, $secret))
             ->environment($isSandbox ? Environment::SANDBOX : Environment::PRODUCTION)
-            //->loggingConfiguration(
-            //    LoggingConfigurationBuilder::init()
-            //        ->level(LogLevel::INFO)
-            //        ->requestConfiguration(RequestLoggingConfigurationBuilder::init()->body(true))
-            //        ->responseConfiguration(ResponseLoggingConfigurationBuilder::init()->headers(true))
-            //)
             ->build();
     }
 
