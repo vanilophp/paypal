@@ -103,7 +103,7 @@ class OrderRepository
         $purchaseUnit = $order->getPurchaseUnits()[0];
 
         // Here we suppose a single payment only!!!
-        $captureStatus = null;
+        $captureStatus = PaypalCaptureStatus::PENDING;
         if ($captures = $purchaseUnit->getPayments()?->getCaptures()) {
             if ($captures) {
                 $capture = $captures[0];

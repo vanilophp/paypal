@@ -15,12 +15,12 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Factories;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Payment\Models\PaymentProxy;
 use Vanilo\Paypal\Exceptions\PaymentNotFoundException;
 use Vanilo\Paypal\Messages\PaypalPaymentResponse;
 use Vanilo\Paypal\Models\Order;
+use Vanilo\Paypal\Models\PaypalCaptureStatus;
 use Vanilo\Paypal\Repository\OrderRepository;
 
 final class ResponseFactory
@@ -77,6 +77,10 @@ final class ResponseFactory
             throw new PaymentNotFoundException("No matching payment was found for PayPal order `$paypalOrderId`");
         }
 
+        $captureStatus = PaypalCaptureStatus::PENDING();
+        $transactionId = null;
+        $amountPaid = null;
+
         switch ($standardizedPaypalResponse->eventType()) {
             case 'CHECKOUT.ORDER.APPROVED':
                 // TODO: capture OR authorize
@@ -85,19 +89,25 @@ final class ResponseFactory
             case 'PAYMENT.CAPTURE.COMPLETED':
                 $amountPaid = $order->amount;
                 $transactionId = $order->payments()[0]->id;
+                $captureStatus = PaypalCaptureStatus::COMPLETED();
                 break;
             case 'PAYMENT.CAPTURE.DECLINED':
+                $captureStatus = PaypalCaptureStatus::DECLINED();
+                break;
             case 'PAYMENT.CAPTURE.PENDING':
+                $captureStatus = PaypalCaptureStatus::PENDING();
+                break;
             case 'PAYMENT.CAPTURE.REFUNDED':
+                $captureStatus = PaypalCaptureStatus::REFUNDED();
+                break;
             case 'PAYMENT.CAPTURE.REVERSED':
-                $transactionId = null;
-                $amountPaid = null;
+                $captureStatus = PaypalCaptureStatus::REFUNDED();
                 break;
         }
 
         return new PaypalPaymentResponse(
             $payment->getPaymentId(),
-            $order->captureStatus,
+            $captureStatus,
             $this->makeResponseMessage($standardizedPaypalResponse, $order),
             $amountPaid,
             $transactionId
@@ -133,6 +143,16 @@ final class ResponseFactory
         // // @todo move it out of here
         if ($order->status->isApproved() && $this->autoCapture) {
             $order = $this->orderRepository->capture($order->id);
+
+            // If capture was not successful, we return a synthetic PENDING response
+            // The proper capture status will be processed when the relevant webhook arrives.
+            if (!$order) {
+                return new PaypalPaymentResponse(
+                    $payment->getPaymentId(),
+                    PaypalCaptureStatus::PENDING(),
+                    ''
+                );
+            }
         }
 
         $amountPaid = null;
