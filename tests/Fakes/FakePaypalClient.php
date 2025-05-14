@@ -79,7 +79,6 @@ class FakePaypalClient implements PaypalClient
         $apiResponse = ApiResponse::createFromContext([], $order, $context);
 
         return $apiResponse;
-
     }
 
     public function getOrder($number): ApiResponse

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Tests\Factory;
 
-use PaypalServerSdkLib\Http\HttpRequest;
 use Vanilo\Payment\Factories\PaymentFactory;
 use Vanilo\Payment\Models\PaymentMethod;
 use Vanilo\Paypal\Factories\RequestFactory;

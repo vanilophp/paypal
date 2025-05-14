@@ -16,7 +16,6 @@ namespace Vanilo\Paypal\Tests;
 
 use Vanilo\Paypal\Messages\PaypalPaymentResponse;
 use Vanilo\Paypal\Models\PaypalCaptureStatus;
-use Vanilo\Paypal\Models\PaypalOrderStatus;
 
 class PaymentResponseTest extends TestCase
 {
