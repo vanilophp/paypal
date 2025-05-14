@@ -37,36 +37,6 @@ final class ResponseFactory
 
     public function createFromRequest(Request $request): PaypalPaymentResponse
     {
-        // event_type (https://developer.paypal.com/api/rest/webhooks/event-names/#orders)
-        //  CHECKOUT.ORDER.APPROVED -> can capture
-        //  PAYMENT.CAPTURE.PENDING -> this is what we receive continuosly
-        //  PAYMENT.CAPTURE.DECLINED
-        //  PAYMENT.CAPTURE.COMPLETED
-        //  PAYMENT.CAPTURE.REFUNDED
-
-        // ->capture()
-        // returns with status of COMPLETED
-        // but the payment.captures[0].status == "PENDING"
-        // so in fact we need to wait for "PAYMENT.CAPTURE.COMPLETED" webhook...
-
-        // !!! GET ORDER & CAPTURE
-        // if order status == 'COMPLETED' doesn't mean that the payment was captured
-        // (it just means that:
-        //      - the payment was created
-        //      - the intent was completed (but it can be in any of the following states: pending, completed, declined)
-        //)
-        // we have to look into 'purchase_units[0].payments.captures[0].status' for the proper status...
-        // This is also true for the processing of the capture response (which returns also an order)
-        //
-        // It seems we need to use the order->payments->status
-        //
-        // ORDER Completed can mean:
-        // https://developer.paypal.com/docs/api/orders/v2/
-        // "The intent of the order was completed and a payments resource was created.
-        // Important: Check the payment status in purchase_units[].payments.captures[].status before fulfilling the order.
-        // A completed order can indicate a payment was authorized, an authorized payment was captured,
-        // or a payment was declined."
-
         $standardizedPaypalResponse = StandardizedPaypalResponse::fromRequest($request);
 
         $paypalOrderId = $standardizedPaypalResponse->orderId();
@@ -81,6 +51,7 @@ final class ResponseFactory
         $transactionId = null;
         $amountPaid = null;
 
+        // See: https://developer.paypal.com/api/rest/webhooks/event-names/
         switch ($standardizedPaypalResponse->eventType()) {
             case 'CHECKOUT.ORDER.APPROVED':
                 // TODO: capture OR authorize
@@ -92,7 +63,6 @@ final class ResponseFactory
             case 'CHECKOUT.PAYMENT-APPROVAL.REVERSED':
                 $captureStatus = PaypalCaptureStatus::REFUNDED();
                 break;
-            // See: https://developer.paypal.com/api/rest/webhooks/event-names/
             case 'PAYMENT.CAPTURE.COMPLETED':
                 $amountPaid = $order->amount;
                 $transactionId = $order->payments()[0]->id;
