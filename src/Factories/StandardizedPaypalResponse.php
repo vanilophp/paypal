@@ -32,7 +32,7 @@ final class StandardizedPaypalResponse
 
     private string $orderId;
 
-    private string $eventType;
+    private ?string $eventType;
 
     public function __construct(string $source, string $orderId, ?string $eventType = null, ?string $message = null)
     {
@@ -87,9 +87,9 @@ final class StandardizedPaypalResponse
     {
         switch ($request->json('event_type')) {
             // See: https://developer.paypal.com/api/rest/webhooks/event-names/
-            case 'PAYMENT.CAPTURE.PENDING':
+            case 'PAYMENT.CAPTURE.DECLINED':
             case 'PAYMENT.CAPTURE.COMPLETED':
-            case 'PAYMENT.CAPTURE.DENIED':
+            case 'PAYMENT.CAPTURE.PENDING':
             case 'PAYMENT.CAPTURE.REFUNDED':
             case 'PAYMENT.CAPTURE.REVERSED':
                 return $request->json('resource.supplementary_data.related_ids.order_id');

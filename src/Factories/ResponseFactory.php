@@ -86,8 +86,8 @@ final class ResponseFactory
                 $amountPaid = $order->amount;
                 $transactionId = $order->payments()[0]->id;
                 break;
+            case 'PAYMENT.CAPTURE.DECLINED':
             case 'PAYMENT.CAPTURE.PENDING':
-            case 'PAYMENT.CAPTURE.DENIED':
             case 'PAYMENT.CAPTURE.REFUNDED':
             case 'PAYMENT.CAPTURE.REVERSED':
                 $transactionId = null;
