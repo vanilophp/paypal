@@ -93,6 +93,8 @@ final class StandardizedPaypalResponse
             case 'PAYMENT.CAPTURE.REFUNDED':
             case 'PAYMENT.CAPTURE.REVERSED':
                 return $request->json('resource.supplementary_data.related_ids.order_id');
+            case 'CHECKOUT.PAYMENT-APPROVAL.REVERSED':
+                return $request->json('resource.order_id');
             case 'CHECKOUT.ORDER.APPROVED':
             default:
                 return $request->json('resource.id');

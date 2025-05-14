@@ -84,8 +84,13 @@ final class ResponseFactory
         switch ($standardizedPaypalResponse->eventType()) {
             case 'CHECKOUT.ORDER.APPROVED':
                 // TODO: capture OR authorize
-                return $this->capturePayment($standardizedPaypalResponse, $order, $payment);
-                // See: https://developer.paypal.com/api/rest/webhooks/event-names/
+                // We don't process the capture response here, only when the proper webhook arrives
+                $this->orderRepository->capture($order->id);
+                break;
+            case 'CHECKOUT.PAYMENT-APPROVAL.REVERSED':
+                $captureStatus = PaypalCaptureStatus::REFUNDED();
+                break;
+            // See: https://developer.paypal.com/api/rest/webhooks/event-names/
             case 'PAYMENT.CAPTURE.COMPLETED':
                 $amountPaid = $order->amount;
                 $transactionId = $order->payments()[0]->id;
@@ -132,42 +137,6 @@ final class ResponseFactory
             '%s: %s',
             ucfirst(strtolower($paypalResponse->source())),
             $paypalResponse->message() ?? $order->status->label()
-        );
-    }
-
-    private function capturePayment(StandardizedPaypalResponse $standardizedPaypalResponse, Order $order, Payment $payment): PaypalPaymentResponse
-    {
-        $transactionId = null;
-
-        // // @todo log `authorized` status/message before capturing
-        // // @todo move it out of here
-        if ($order->status->isApproved() && $this->autoCapture) {
-            $order = $this->orderRepository->capture($order->id);
-
-            // If capture was not successful, we return a synthetic PENDING response
-            // The proper capture status will be processed when the relevant webhook arrives.
-            if (!$order) {
-                return new PaypalPaymentResponse(
-                    $payment->getPaymentId(),
-                    PaypalCaptureStatus::PENDING(),
-                    ''
-                );
-            }
-        }
-
-        $amountPaid = null;
-        if ($order->captureStatus->isCompleted()) {
-            /** @todo Take this amount precisely from the payments data */
-            $amountPaid = $order->amount;
-            $transactionId = $order->payments()[0]->id;
-        }
-
-        return new PaypalPaymentResponse(
-            $payment->getPaymentId(),
-            $order->captureStatus,
-            $this->makeResponseMessage($standardizedPaypalResponse, $order),
-            $amountPaid,
-            $transactionId
         );
     }
 }
