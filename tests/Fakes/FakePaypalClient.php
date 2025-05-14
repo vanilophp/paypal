@@ -15,12 +15,14 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Tests\Fakes;
 
 use Carbon\Carbon;
-use Illuminate\Support\Str;
-use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
-use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
-use PayPalCheckoutSdk\Orders\OrdersGetRequest;
-use PayPalHttp\HttpRequest;
-use PayPalHttp\HttpResponse;
+use PaypalServerSdkLib\Http\ApiResponse;
+use PaypalServerSdkLib\Http\HttpContext;
+use PaypalServerSdkLib\Http\HttpRequest;
+use PaypalServerSdkLib\Http\HttpResponse;
+use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
+use PaypalServerSdkLib\Models\Builders\OrderBuilder;
+use PaypalServerSdkLib\Models\Builders\PurchaseUnitBuilder;
+use PaypalServerSdkLib\Models\OrderRequest;
 use Vanilo\Paypal\Contracts\PaypalClient;
 use Vanilo\Paypal\Models\PaypalOrderStatus;
 use Vanilo\Support\Generators\NanoIdGenerator;
@@ -34,10 +36,6 @@ class FakePaypalClient implements PaypalClient
 {
     private array $data = [];
 
-    private $requestObserver = null;
-
-    private $responseObserver = null;
-
     private NanoIdGenerator $nanoId;
 
     public function __construct()
@@ -45,103 +43,76 @@ class FakePaypalClient implements PaypalClient
         $this->nanoId = new NanoIdGenerator(17, '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ');
     }
 
-    public function execute(HttpRequest $httpRequest): HttpResponse
-    {
-        if (null !== $this->requestObserver) {
-            call_user_func($this->requestObserver, $httpRequest);
-        }
-
-        $method = $this->getMethodName($httpRequest);
-
-        $response = method_exists($this, $method) ? $this->{$method}($httpRequest) : $this->unknownRequest($httpRequest);
-        if (null !== $this->responseObserver) {
-            call_user_func($this->responseObserver, $response);
-        }
-
-        return $response;
-    }
-
-    public function observeRequestWith(callable $observer): void
-    {
-        $this->requestObserver = $observer;
-    }
-
-    public function observeResponseWith(callable $observer): void
-    {
-        $this->responseObserver = $observer;
-    }
-
     public function simulateOrderApproval(string $id): void
     {
         $this->changeOrderStatus($id, PaypalOrderStatus::APPROVED());
     }
 
-    private function ordersCreate(OrdersCreateRequest $request): HttpResponse
+    public function createOrder(OrderRequest $request): ApiResponse
     {
-        $id = $this->nanoId->generate();
-        $body = [
-            "id" => $id,
-            "status" => "CREATED",
-            "links" => [
-                [
-                    "href" => "https://api-m.paypal.com/v2/checkout/orders/$id",
-                    "rel" => "self",
-                    "method" => "GET",
-                ],
-                [
-                    "href" => "https://www.paypal.com/checkoutnow?token=$id",
-                    "rel" => "approve",
-                    "method" => "GET",
-                ],
-                [
-                    "href" => "https://api-m.paypal.com/v2/checkout/orders/$id",
-                    "rel" => "update",
-                    "method" => "PATCH"
-                ],
-                [
-                    "href" => "https://api-m.paypal.com/v2/checkout/orders/$id/capture",
-                    "rel" => "capture",
-                    "method" => "POST"
-                ]
-            ]
-        ];
+        $order = OrderBuilder::init()
+            ->id($request->getPurchaseUnits()[0]->getCustomId())
+            ->intent('CAPTURE')
+            ->status('CREATED')
+            ->purchaseUnits([
+                PurchaseUnitBuilder::init()
+                    ->referenceId($request->getPurchaseUnits()[0]->getCustomId())
+                    ->amount(AmountWithBreakdownBuilder::init($request->getPurchaseUnits()[0]->getAmount()->getCurrencyCode(), $request->getPurchaseUnits()[0]->getAmount()->getValue())->build())
+                    ->build()
+            ])
+            ->links([])
+            ->build();
 
-        if ($this->prefersRepresentation($request)) {
-            $body = array_merge($body, [
-                "intent" => $request->body->intent ?? "CAPTURE",
-                "purchase_units" => [
-                    [
-                        "reference_id" => 'default',
-                        "amount" => [
-                            "currency_code" => $request->body['purchase_units'][0]['amount']['currency_code'],
-                            "value" => $request->body['purchase_units'][0]['amount']['value'],
-                        ],
-                        "payee" => [
-                            "email_address" => 'random@email.neverexisted.here.org',
-                            'merchant_id' => 'YYYXXXZZZVB9L'
-                        ]
-                    ]
-                ],
-                'create_time' => Carbon::now('UTC')->toIso8601String()
-            ]);
-            if (isset($request->body['purchase_units'][0]['custom_id'])) {
-                $body['purchase_units'][0]['custom_id'] = $request->body['purchase_units'][0]['custom_id'];
-            }
-        }
+        // Build a fake HttpRequest (can be a simple GET to PayPal for this purpose)
+        $request = new HttpRequest('POST');
 
-        $this->data['orders'][$id] = $body;
+        // Create a fake HttpResponse object with headers, body and status code
+        $response = new HttpResponse(
+            201,
+            ['Content-Type' => ['application/json']],
+            json_encode([]) // raw body
+        );
 
-        return $this->createResponse(201, $body);
+        // Construct the HttpContext with the request and response
+        $context = new HttpContext(new HttpRequest('POST'), $response);
+
+        $apiResponse = ApiResponse::createFromContext([], $order, $context);
+
+        return $apiResponse;
+
     }
 
-    private function ordersGet(OrdersGetRequest $request): HttpResponse
+    public function getOrder($number): ApiResponse
     {
-        $id = Str::replaceLast('?', '', last(explode('/', $request->path)));
-        if (!isset($this->data['orders'][$id])) {
-            return $this->createResponse(404, []);
-        }
+        $order = OrderBuilder::init()
+            ->id($number)
+            ->intent('CAPTURE')
+            ->status('CREATED')
+            ->purchaseUnits([
+                PurchaseUnitBuilder::init()
+                    ->referenceId($number)
+                    ->amount(AmountWithBreakdownBuilder::init('EUR', '12')->build())
+                    ->build()
+            ])
+            ->links([])
+            ->build();
 
-        return $this->createResponse(200, $this->data['orders'][$id]);
+        // Build a fake HttpRequest (can be a simple GET to PayPal for this purpose)
+        $request = new HttpRequest('POST');
+
+        // Create a fake HttpResponse object with headers, body and status code
+        $response = new HttpResponse(
+            200,
+            ['Content-Type' => ['application/json']],
+            json_encode([]) // raw body
+        );
+
+        // Construct the HttpContext with the request and response
+        $context = new HttpContext(new HttpRequest('POST'), $response);
+
+        $apiResponse = ApiResponse::createFromContext([], $order, $context);
+
+        return $apiResponse;
     }
 
     private function ordersCapture(OrdersCaptureRequest $request): HttpResponse
@@ -201,26 +172,9 @@ class FakePaypalClient implements PaypalClient
         return $this->createResponse(201, $this->data['orders'][$id]);
     }
 
-    private function unknownRequest(HttpRequest $httpRequest): HttpResponse
-    {
-        throw new \LogicException("Fake Paypal Client: don't know how to handle " . get_class($httpRequest));
-    }
-
-    private function getMethodName(HttpRequest $httpRequest): string
-    {
-        return Str::camel(Str::replaceLast('Request', '', class_basename(get_class($httpRequest))));
-    }
-
     private function createResponse(int $status, array $body): HttpResponse
     {
         return new HttpResponse($status, json_decode(json_encode($body), false), []);
-    }
-
-    private function prefersRepresentation(HttpRequest $httpRequest): bool
-    {
-        $prefers = $httpRequest->headers['Prefer'] ?? '';
-
-        return 'return=representation' === strtolower($prefers);
     }
 
     private function changeOrderStatus(string $id, PaypalOrderStatus $newStatus): void
