@@ -85,7 +85,9 @@ final class ResponseFactory
             case 'CHECKOUT.ORDER.APPROVED':
                 // TODO: capture OR authorize
                 // We don't process the capture response here, only when the proper webhook arrives
-                $this->orderRepository->capture($order->id);
+                if ($this->autoCapture) {
+                    $this->orderRepository->capture($order->id);
+                }
                 break;
             case 'CHECKOUT.PAYMENT-APPROVAL.REVERSED':
                 $captureStatus = PaypalCaptureStatus::REFUNDED();
