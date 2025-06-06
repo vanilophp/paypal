@@ -28,9 +28,9 @@ use Vanilo\Paypal\Models\PaypalOrderStatus;
 use Vanilo\Support\Generators\NanoIdGenerator;
 
 /**
- * FakePaypalClient for testing purposes
- * emulates responses, stores data in
- * memory for the objects lifetime
+ * The FakePaypalClient is for testing purposes
+ * it emulates the responses, stores data in
+ * the memory for the lifetime of objects
  */
 class FakePaypalClient implements PaypalClient
 {
@@ -41,11 +41,6 @@ class FakePaypalClient implements PaypalClient
     public function __construct()
     {
         $this->nanoId = new NanoIdGenerator(17, '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-    }
-
-    public function simulateOrderApproval(string $id): void
-    {
-        $this->changeOrderStatus($id, PaypalOrderStatus::APPROVED());
     }
 
     public function createOrder(OrderRequest $request): ApiResponse
