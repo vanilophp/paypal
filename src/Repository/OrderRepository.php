@@ -15,125 +15,125 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Repository;
 
 use Exception;
-use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
-use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
-use PayPalCheckoutSdk\Orders\OrdersGetRequest;
-use PayPalHttp\HttpException as PayPalHttpException;
-use stdClass;
+use PaypalServerSdkLib\Exceptions\ApiException;
+use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
+use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
+use PaypalServerSdkLib\Models\Builders\PaymentSourceBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletExperienceContextBuilder;
+use PaypalServerSdkLib\Models\Builders\PurchaseUnitRequestBuilder;
+use PaypalServerSdkLib\Models\CheckoutPaymentIntent;
+use PaypalServerSdkLib\Models\Order as RemoteOrder;
+use PaypalServerSdkLib\Models\PaypalExperienceUserAction;
 use Vanilo\Payment\Contracts\Payment;
-use Vanilo\Paypal\Concerns\InteractsWithPaypalApi;
+use Vanilo\Paypal\Contracts\PaypalClient;
 use Vanilo\Paypal\Exceptions\OrderNotApprovedException;
 use Vanilo\Paypal\Models\Order;
-use Vanilo\Paypal\Models\Payment as PaypalPayment;
+use Vanilo\Paypal\Models\PaypalCaptureStatus;
 use Vanilo\Paypal\Models\PaypalOrderStatus;
 
 class OrderRepository
 {
-    use InteractsWithPaypalApi;
+    public function __construct(readonly PaypalClient $client)
+    {
+    }
 
     public function create(Payment $payment, ?string $returnUrl = null, string $cancelUrl = null): Order
     {
-        $orderCreateRequest = new OrdersCreateRequest();
-        $orderCreateRequest->prefer('return=representation');
+        $paymentSource = PaymentSourceBuilder::init()
+            ->paypal(
+                PaypalWalletBuilder::init()
+                    ->experienceContext(
+                        PaypalWalletExperienceContextBuilder::init()
+                            ->paymentMethodPreference('IMMEDIATE_PAYMENT_REQUIRED')
+                            ->returnUrl($returnUrl)
+                            ->cancelUrl($cancelUrl)
+                            ->userAction(PaypalExperienceUserAction::PAY_NOW)
+                            ->build()
+                    )->build()
+            )->build();
 
-        $applicationContext = [];
-        if ($returnUrl) {
-            $applicationContext['application_context']['return_url'] = $returnUrl;
-        }
-        if ($cancelUrl) {
-            $applicationContext['application_context']['cancel_url'] = $cancelUrl;
-        }
-
-        $orderCreateRequest->body = array_merge([
-            'intent' => 'CAPTURE',
-            'purchase_units' => [
-                [
-                    'amount' => [
-                        'currency_code' => $payment->getCurrency(),
-                        'value' => $payment->getAmount()
-                    ],
-                    'custom_id' => $payment->getPaymentId(),
-                ]
+        $orderCreateRequest = OrderRequestBuilder::init(
+            CheckoutPaymentIntent::CAPTURE,
+            [
+                PurchaseUnitRequestBuilder::init(
+                    AmountWithBreakdownBuilder::init(
+                        $payment->getCurrency(),
+                        (string) $payment->getAmount()
+                    )->build()
+                )->customId($payment->getPaymentId())->build(),
             ]
-        ], $applicationContext);
+        )
+            ->paymentSource($paymentSource)
+            ->build();
 
-        $response = $this->client->execute($orderCreateRequest);
+        $response = $this->client->createOrder($orderCreateRequest);
 
-        return $this->orderFromPayload($response->result);
+        return $this->orderFromPayload($response->getResult());
     }
 
     public function get(string $id): ?Order
     {
-        $response = $this->client->execute(new OrdersGetRequest($id));
+        $response = $this->client->getOrder($id);
 
-        if (200 !== $response->statusCode) {
+        if (200 !== $response->getStatusCode()) {
             return null;
         }
 
-        return $this->orderFromPayload($response->result);
+        return $this->orderFromPayload($response->getResult());
     }
 
     public function capture(string $id): ?Order
     {
         try {
-            $request = new OrdersCaptureRequest($id);
-            $request->prefer('return=representation');
-            $response = $this->client->execute($request);
+            $response = $this->client->captureOrder($id);
 
-            if (201 !== $response->statusCode) {
+            if (201 !== $response->getStatusCode()) {
                 return null;
             }
-        } catch (PayPalHttpException $e) {
+        } catch (ApiException $e) {
             throw $this->convertException($e, $id);
         }
 
-        return $this->orderFromPayload($response->result);
+        return $this->orderFromPayload($response->getResult());
     }
 
-    /**
-     * @param stdClass|array|string $payload
-     */
-    private function orderFromPayload($payload): Order
+    private function orderFromPayload(RemoteOrder $order): Order
     {
-        // It's highly unlikely that the payload will be string or array but
-        // that's what the docblock states in the original paypal SDK and
-        // PHP's `json_decode` return type is ambiguous so let's check
-        if (!($payload instanceof stdClass)) {
-            if (!is_string($payload)) {
-                $payload = json_encode($payload);
+        $purchaseUnit = $order->getPurchaseUnits()[0];
+
+        // Here we suppose a single payment only!!!
+        $captureStatus = PaypalCaptureStatus::PENDING;
+        if ($captures = $purchaseUnit->getPayments()?->getCaptures()) {
+            if ($captures) {
+                $capture = $captures[0];
+                $captureStatus = $capture->getStatus();
             }
-            $payload = json_decode($payload, false);
         }
 
-        $purchaseUnit = $payload->purchase_units[0];
         $result = new Order(
-            $payload->id,
-            PaypalOrderStatus::create($payload->status ?? null),
-            floatval($purchaseUnit->amount->value),
-            $purchaseUnit->amount->currency_code,
+            $order->getId(),
+            PaypalOrderStatus::create($order->getStatus() ?? null),
+            PaypalCaptureStatus::create($captureStatus),
+            floatval($purchaseUnit->getAmount()->getValue()),
+            $purchaseUnit->getAmount()->getCurrencyCode(),
         );
 
-        if (property_exists($purchaseUnit, 'custom_id')) {
-            $result->vaniloPaymentId = $purchaseUnit->custom_id;
+        $result->vaniloPaymentId = $purchaseUnit->getCustomId();
+
+        foreach ($order->getLinks() as $link) {
+            $result->links->{$link->getRel()} = $link->getHref();
         }
 
-        if (property_exists($payload, 'links')) {
-            foreach ($payload->links as $link) {
-                if (property_exists($result->links, $link->rel)) {
-                    $result->links->{$link->rel} = $link->href;
-                }
-            }
-        }
-
-        if (property_exists($purchaseUnit, 'payments') && property_exists($purchaseUnit->payments, 'captures')) {
-            foreach ($purchaseUnit->payments->captures as $capture) {
+        if ($captures) {
+            foreach ($captures as $capture) {
                 $result->addPayment(
-                    new PaypalPayment(
-                        $capture->id,
-                        $capture->status,
-                        floatval($capture->amount->value),
-                        $capture->amount->currency_code,
-                        (bool) $capture->final_capture,
+                    new \Vanilo\Paypal\Models\Payment(
+                        $capture->getId(),
+                        PaypalCaptureStatus::create($capture->getStatus() ?? null),
+                        floatval($capture->getAmount()->getValue()),
+                        $capture->getAmount()->getCurrencyCode(),
+                        (bool) $capture->getFinalCapture(),
                     )
                 );
             }
@@ -142,16 +142,14 @@ class OrderRepository
         return $result;
     }
 
-    private function convertException(PayPalHttpException $e, string $id): Exception
+    // TOREVIEW
+    private function convertException(ApiException $e, string $id): Exception
     {
-        if (422 == $e->statusCode) {
+        if (422 == $e->getCode()) {
             $data = json_decode($e->getMessage(), true);
             $details = $data['details'][0] ?? null;
             if (null !== $details && 'ORDER_NOT_APPROVED' === $details['issue']) {
-                return new OrderNotApprovedException(
-                    $data['message'] ?? 'Order is not approved',
-                    ['paypal_order_id' => $id]
-                );
+                return new OrderNotApprovedException($data['message'] ?? "Order $id is not approved");
             }
         }
 

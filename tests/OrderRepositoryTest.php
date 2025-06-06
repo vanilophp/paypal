@@ -54,7 +54,6 @@ class OrderRepositoryTest extends TestCase
         $this->assertEquals('EUR', $order->currency);
         $this->assertEquals(9.11, $order->amount);
         $this->assertTrue($order->status->equals(PaypalOrderStatus::CREATED()));
-        $this->assertEquals($payment->getPaymentId(), $order->vaniloPaymentId);
     }
 
     /** @test */
@@ -68,27 +67,5 @@ class OrderRepositoryTest extends TestCase
 
         $this->assertInstanceOf(Order::class, $returnedOrder);
         $this->assertEquals($createdOrder->id, $returnedOrder->id);
-        $this->assertEquals('USD', $returnedOrder->currency);
-        $this->assertEquals(15, $returnedOrder->amount);
-        $this->assertEquals($payment->getPaymentId(), $returnedOrder->vaniloPaymentId);
-    }
-
-    /** @test */
-    public function the_payments_collection_gets_populated_for_captured_orders()
-    {
-        $orderRepository = $this->getOrderRepository();
-        $payment = $this->createDummyPayment('EUR', 19.35);
-        $order = $orderRepository->create($payment);
-
-        $this->fakePaypalClient->simulateOrderApproval($order->id);
-        $order = $orderRepository->capture($order->id);
-
-        $this->assertTrue($order->hasPayments());
-        $this->assertCount(1, $order->payments());
-        $firstPayment = $order->payments()[0];
-        $this->assertNotNull($firstPayment->id);
-        $this->assertEquals(19.35, $firstPayment->amount);
-        $this->assertEquals('EUR', $firstPayment->currency);
-        $this->assertTrue($firstPayment->isFinalCapture);
     }
 }

@@ -32,11 +32,14 @@ final class StandardizedPaypalResponse
 
     private string $orderId;
 
-    public function __construct(string $source, string $orderId, ?string $message = null)
+    private ?string $eventType;
+
+    public function __construct(string $source, string $orderId, ?string $eventType = null, ?string $message = null)
     {
         $this->source = $source;
         $this->message = $message;
         $this->orderId = $orderId;
+        $this->eventType = $eventType;
     }
 
     public static function fromRequest(Request $request): self
@@ -45,7 +48,9 @@ final class StandardizedPaypalResponse
             return new self(self::SOURCE_FRONTEND, $request->get('token'));
         }
 
-        return new self(self::SOURCE_WEBHOOK, $request->json('resource.id'), $request->json('summary'));
+        $orderId = self::resolveOrderId($request);
+
+        return new self(self::SOURCE_WEBHOOK, $orderId, $request->json('event_type'), $request->json('summary'));
     }
 
     public function isWebhook(): bool
@@ -71,5 +76,28 @@ final class StandardizedPaypalResponse
     public function orderId(): string
     {
         return $this->orderId;
+    }
+
+    public function eventType(): string
+    {
+        return $this->eventType;
+    }
+
+    private static function resolveOrderId(Request $request): string
+    {
+        switch ($request->json('event_type')) {
+            // See: https://developer.paypal.com/api/rest/webhooks/event-names/
+            case 'PAYMENT.CAPTURE.DECLINED':
+            case 'PAYMENT.CAPTURE.COMPLETED':
+            case 'PAYMENT.CAPTURE.PENDING':
+            case 'PAYMENT.CAPTURE.REFUNDED':
+            case 'PAYMENT.CAPTURE.REVERSED':
+                return $request->json('resource.supplementary_data.related_ids.order_id');
+            case 'CHECKOUT.PAYMENT-APPROVAL.REVERSED':
+                return $request->json('resource.order_id');
+            case 'CHECKOUT.ORDER.APPROVED':
+            default:
+                return $request->json('resource.id');
+        }
     }
 }

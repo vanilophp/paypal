@@ -6,6 +6,12 @@
 [![Packagist downloads](https://img.shields.io/packagist/dt/vanilo/paypal.svg?style=flat-square)](https://packagist.org/packages/vanilo/paypal)
 [![MIT Software License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
+> [!CAUTION]
+> This is the development version (v3.x) of this module.
+> It is a heavy work in progress and not meant to be used
+> for any application in its current phase. Use version 2.1 (branch `2.x`)
+> for your application until v3.0 gets released
+
 This library enables [PayPal](https://developer.paypal.com/docs/business/checkout/server-side-api-calls/)
 for [Vanilo Payments](https://vanilo.io/docs/master/payments).
 

@@ -22,15 +22,12 @@ use Vanilo\Payment\Contracts\PaymentGateway;
 use Vanilo\Payment\Contracts\PaymentRequest;
 use Vanilo\Payment\Contracts\PaymentResponse;
 use Vanilo\Payment\Contracts\TransactionHandler;
-use Vanilo\Paypal\Concerns\HasPaypalConstructor;
-use Vanilo\Paypal\Exceptions\PaymentNotFoundException;
 use Vanilo\Paypal\Factories\RequestFactory;
 use Vanilo\Paypal\Factories\ResponseFactory;
+use Vanilo\Paypal\Transaction\Handler;
 
 class PaypalPaymentGateway implements PaymentGateway
 {
-    use HasPaypalConstructor;
-
     public const DEFAULT_ID = 'paypal';
 
     private static ?string $svg = null;
@@ -39,9 +36,8 @@ class PaypalPaymentGateway implements PaymentGateway
 
     private ?ResponseFactory $responseFactory = null;
 
-    public static function getName(): string
+    public function __construct(readonly string $returnUrl, readonly string $cancelUrl)
     {
-        return 'PayPal';
     }
 
     public function createPaymentRequest(Payment $payment, ?Address $shippingAddress = null, array $options = []): PaymentRequest
@@ -58,9 +54,6 @@ class PaypalPaymentGateway implements PaymentGateway
         return $this->requestFactory->create($payment, array_merge($defaultOptions, $options));
     }
 
-    /**
-     * @throws PaymentNotFoundException
-     */
     public function processPaymentResponse(Request $request, array $options = []): PaymentResponse
     {
         if (null === $this->responseFactory) {
@@ -77,7 +70,12 @@ class PaypalPaymentGateway implements PaymentGateway
 
     public function transactionHandler(): ?TransactionHandler
     {
-        return null;
+        return new Handler();
+    }
+
+    public static function getName(): string
+    {
+        return 'PayPal';
     }
 
     public function isOffline(): bool

@@ -16,16 +16,14 @@ namespace Vanilo\Paypal\Messages;
 
 use Illuminate\Support\Facades\View;
 use Vanilo\Payment\Contracts\PaymentRequest;
+use Vanilo\Paypal\Models\Order;
 
 class PaypalPaymentRequest implements PaymentRequest
 {
     private string $view = 'paypal::_request';
 
-    private string $approveUrl;
-
-    public function __construct(string $approveUrl)
+    public function __construct(readonly Order $order)
     {
-        $this->approveUrl = $approveUrl;
     }
 
     public function getHtmlSnippet(array $options = []): ?string
@@ -33,8 +31,8 @@ class PaypalPaymentRequest implements PaymentRequest
         return View::make(
             $this->view,
             [
-                'url' => $this->approveUrl,
-                'autoRedirect' => $options['autoRedirect'] ?? false
+                'url' => $this->order->links->{"payer-action"},
+                'autoRedirect' => $options['autoRedirect'] ?? false,
             ]
         )->render();
     }
@@ -53,6 +51,6 @@ class PaypalPaymentRequest implements PaymentRequest
 
     public function getRemoteId(): ?string
     {
-        return null;
+        return $this->order->id;
     }
 }
