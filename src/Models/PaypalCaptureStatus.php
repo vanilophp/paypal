@@ -15,9 +15,11 @@ declare(strict_types=1);
 namespace Vanilo\Paypal\Models;
 
 use Konekt\Enum\Enum;
+use PaypalServerSdkLib\Models\CaptureStatus;
 
 /**
- * See: https://developer.paypal.com/docs/api/payments/v2/#captures_get
+ * This class turns the SDK's CaptureStatus class into an Enum
+ * @see https://developer.paypal.com/docs/api/payments/v2/#captures_get
  *
  * @method static PaypalCaptureStatus COMPLETED()
  * @method static PaypalCaptureStatus DECLINED()
@@ -37,24 +39,24 @@ final class PaypalCaptureStatus extends Enum
 {
     public const __DEFAULT = self::PENDING;
 
-    public const COMPLETED = 'COMPLETED';
-    public const DECLINED = 'DECLINED';
-    public const PENDING = 'PENDING';
-    public const FAILED = 'FAILED';
-    public const REFUNDED = 'REFUNDED';
-    public const PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED';
+    public const COMPLETED = CaptureStatus::COMPLETED;
+    public const DECLINED = CaptureStatus::DECLINED;
+    public const PENDING = CaptureStatus::PENDING;
+    public const FAILED = CaptureStatus::FAILED;
+    public const REFUNDED = CaptureStatus::REFUNDED;
+    public const PARTIALLY_REFUNDED = CaptureStatus::PARTIALLY_REFUNDED;
 
     protected static array $labels = [];
 
     protected static function boot()
     {
         static::$labels = [
-            self::COMPLETED => __('The payment was successfully completed.'),
-            self::DECLINED => __('The payment was declined.'),
-            self::PENDING => __('The payment is pending (e.g. waiting for funds or manual approval).'),
-            self::FAILED => __('The payment failed.'),
-            self::REFUNDED => __('The payment was refunded.'),
-            self::PARTIALLY_REFUNDED => __('Only a portion of the payment was refunded.'),
+            self::COMPLETED => __('Successfully completed'),
+            self::DECLINED => __('Declined'),
+            self::PENDING => __('Pending'),
+            self::FAILED => __('Failed'),
+            self::REFUNDED => __('Refunded'),
+            self::PARTIALLY_REFUNDED => __('Partially refunded'),
         ];
     }
 }

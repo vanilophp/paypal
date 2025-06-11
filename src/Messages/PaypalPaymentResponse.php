@@ -22,35 +22,19 @@ use Vanilo\Paypal\Models\PaypalCaptureStatus;
 
 class PaypalPaymentResponse implements PaymentResponse
 {
-    private string $paymentId;
-
-    private ?float $amountPaid;
-
-    private PaypalCaptureStatus $nativeStatus;
-
-    private ?PaymentStatus $status = null;
-
-    private string $message;
-
-    private ?string $transactionId;
-
     public function __construct(
-        string $paymentId,
-        PaypalCaptureStatus $nativeStatus,
-        string $message,
-        ?float $amountPaid = null,
-        ?string $transactionId = null
+        private string $paymentId,
+        private PaypalCaptureStatus $nativeStatus,
+        private PaymentStatus $status,
+        private string $message,
+        private ?float $amountPaid = null,
+        private ?string $transactionId = null,
     ) {
-        $this->paymentId = $paymentId;
-        $this->nativeStatus = $nativeStatus;
-        $this->amountPaid = $amountPaid;
-        $this->message = $message;
-        $this->transactionId = $transactionId;
     }
 
     public function wasSuccessful(): bool
     {
-        return $this->nativeStatus->isCompleted();
+        return $this->status->isAnyOf(PaymentStatusProxy::AUTHORIZED(), PaymentStatusProxy::PAID());
     }
 
     public function getMessage(): string
@@ -75,27 +59,6 @@ class PaypalPaymentResponse implements PaymentResponse
 
     public function getStatus(): PaymentStatus
     {
-        if (null === $this->status) {
-            switch ($this->nativeStatus->value()) {
-                case PaypalCaptureStatus::COMPLETED:
-                    $this->status = PaymentStatusProxy::PAID();
-                    break;
-                case PaypalCaptureStatus::DECLINED:
-                    $this->status = PaymentStatusProxy::DECLINED();
-                    break;
-                case PaypalCaptureStatus::PENDING:
-                case PaypalCaptureStatus::FAILED:
-                    $this->status = PaymentStatusProxy::PENDING();
-                    break;
-                case PaypalCaptureStatus::REFUNDED:
-                    $this->status = PaymentStatusProxy::REFUNDED();
-                    break;
-                case PaypalCaptureStatus::PARTIALLY_REFUNDED:
-                    $this->status = PaymentStatusProxy::PARTIALLY_REFUNDED();
-                    break;
-            }
-        }
-
         return $this->status;
     }
 

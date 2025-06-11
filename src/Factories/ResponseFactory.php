@@ -17,10 +17,12 @@ namespace Vanilo\Paypal\Factories;
 use Illuminate\Http\Request;
 use Vanilo\Payment\Contracts\Payment;
 use Vanilo\Payment\Models\PaymentProxy;
+use Vanilo\Payment\Models\PaymentStatusProxy;
 use Vanilo\Paypal\Exceptions\PaymentNotFoundException;
 use Vanilo\Paypal\Messages\PaypalPaymentResponse;
 use Vanilo\Paypal\Models\Order;
 use Vanilo\Paypal\Models\PaypalCaptureStatus;
+use Vanilo\Paypal\Models\PaypalWebhookEvent;
 use Vanilo\Paypal\Repository\OrderRepository;
 
 final class ResponseFactory
@@ -47,44 +49,51 @@ final class ResponseFactory
             throw new PaymentNotFoundException("No matching payment was found for PayPal order `$paypalOrderId`");
         }
 
-        $captureStatus = PaypalCaptureStatus::PENDING();
+        $rawCaptureStatus = $request->json('resource.status');
+        $captureStatus = PaypalCaptureStatus::has($rawCaptureStatus) ? PaypalCaptureStatus::create($rawCaptureStatus) : PaypalCaptureStatus::PENDING();
+        $vaniloStatus = match ($captureStatus->value()) {
+            PaypalCaptureStatus::PENDING => PaymentStatusProxy::PENDING(),
+            PaypalCaptureStatus::FAILED, PaypalCaptureStatus::DECLINED => PaymentStatusProxy::DECLINED(),
+            PaypalCaptureStatus::REFUNDED => PaymentStatusProxy::REFUNDED(),
+            PaypalCaptureStatus::PARTIALLY_REFUNDED => PaymentStatusProxy::PARTIALLY_REFUNDED(),
+            PaypalCaptureStatus::COMPLETED() =>  PaymentStatusProxy::PAID(),
+        };
+
         $transactionId = null;
         $amountPaid = null;
 
-        // See: https://developer.paypal.com/api/rest/webhooks/event-names/
-        switch ($standardizedPaypalResponse->eventType()) {
-            case 'CHECKOUT.ORDER.APPROVED':
-                // TODO: capture OR authorize
-                // We don't process the capture response here, only when the proper webhook arrives
+        switch ($standardizedPaypalResponse->eventType()?->value()) {
+            case PaypalWebhookEvent::CHECKOUT_ORDER_APPROVED:
+                $vaniloStatus = PaymentStatusProxy::AUTHORIZED();
+                $amountPaid = $order->amount;
+                $transactionId = $order->payments()[0]->id;
                 if ($this->autoCapture) {
                     $this->orderRepository->capture($order->id);
                 }
                 break;
-            case 'CHECKOUT.PAYMENT-APPROVAL.REVERSED':
-                $captureStatus = PaypalCaptureStatus::REFUNDED();
+            case PaypalWebhookEvent::CHECKOUT_PAYMENT_APPROVAL_REVERSED:
+            case PaypalWebhookEvent::PAYMENT_CAPTURE_REFUNDED:
+            case PaypalWebhookEvent::PAYMENT_CAPTURE_REVERSED:
+                // @todo check if the refund is partial and use PARTIALLY_REFUNDED instead
+                if ($vaniloStatus->isNoneOf(PaymentStatusProxy::REFUNDED(), PaymentStatusProxy::PARTIALLY_REFUNDED())) {
+                    $vaniloStatus = PaymentStatusProxy::REFUNDED();
+                }
                 break;
-            case 'PAYMENT.CAPTURE.COMPLETED':
+            case PaypalWebhookEvent::PAYMENT_CAPTURE_COMPLETED:
+                // @todo check the amount and set partial if needed
                 $amountPaid = $order->amount;
                 $transactionId = $order->payments()[0]->id;
                 $captureStatus = PaypalCaptureStatus::COMPLETED();
                 break;
-            case 'PAYMENT.CAPTURE.DECLINED':
+            case PaypalWebhookEvent::PAYMENT_CAPTURE_DECLINED:
                 $captureStatus = PaypalCaptureStatus::DECLINED();
-                break;
-            case 'PAYMENT.CAPTURE.PENDING':
-                $captureStatus = PaypalCaptureStatus::PENDING();
-                break;
-            case 'PAYMENT.CAPTURE.REFUNDED':
-                $captureStatus = PaypalCaptureStatus::REFUNDED();
-                break;
-            case 'PAYMENT.CAPTURE.REVERSED':
-                $captureStatus = PaypalCaptureStatus::REFUNDED();
                 break;
         }
 
         return new PaypalPaymentResponse(
             $payment->getPaymentId(),
             $captureStatus,
+            $vaniloStatus,
             $this->makeResponseMessage($standardizedPaypalResponse, $order),
             $amountPaid,
             $transactionId
