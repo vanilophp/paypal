@@ -65,8 +65,16 @@ final class ResponseFactory
         switch ($standardizedPaypalResponse->eventType()?->value()) {
             case PaypalWebhookEvent::CHECKOUT_ORDER_APPROVED:
                 $vaniloStatus = PaymentStatusProxy::AUTHORIZED();
-                $amountPaid = $order->amount;
-                $transactionId = $order->payments()[0]->id;
+
+                if (is_array($purchaseUnits = $request->json('resource.purchase_units'))) {
+                    $amountPaid = 0;
+                    foreach ($purchaseUnits as $purchaseUnit) {
+                        $amountPaid += floatval($purchaseUnit['amount']['value']);
+                    }
+                } else {
+                    $amountPaid = $order->amount;
+                }
+                $transactionId = $request->json('id');
                 if ($this->autoCapture) {
                     $this->orderRepository->capture($order->id);
                 }
