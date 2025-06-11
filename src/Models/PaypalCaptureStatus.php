@@ -51,7 +51,7 @@ final class PaypalCaptureStatus extends Enum
     protected static function boot()
     {
         static::$labels = [
-            self::COMPLETED => __('Successfully completed'),
+            self::COMPLETED => __('Completed'),
             self::DECLINED => __('Declined'),
             self::PENDING => __('Pending'),
             self::FAILED => __('Failed'),

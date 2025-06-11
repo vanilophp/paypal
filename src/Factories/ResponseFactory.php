@@ -57,24 +57,14 @@ final class ResponseFactory
             PaypalCaptureStatus::REFUNDED => PaymentStatusProxy::REFUNDED(),
             PaypalCaptureStatus::PARTIALLY_REFUNDED => PaymentStatusProxy::PARTIALLY_REFUNDED(),
             PaypalCaptureStatus::COMPLETED => PaymentStatusProxy::PAID(),
+            default => $payment->getStatus(), // keep the old status then
         };
 
-        $transactionId = null;
+        $transactionId = $request->json('id');
         $amountPaid = null;
 
         switch ($standardizedPaypalResponse->eventType()?->value()) {
             case PaypalWebhookEvent::CHECKOUT_ORDER_APPROVED:
-                $vaniloStatus = PaymentStatusProxy::AUTHORIZED();
-
-                if (is_array($purchaseUnits = $request->json('resource.purchase_units'))) {
-                    $amountPaid = 0;
-                    foreach ($purchaseUnits as $purchaseUnit) {
-                        $amountPaid += floatval($purchaseUnit['amount']['value']);
-                    }
-                } else {
-                    $amountPaid = $order->amount;
-                }
-                $transactionId = $request->json('id');
                 if ($this->autoCapture) {
                     $this->orderRepository->capture($order->id);
                 }
@@ -83,18 +73,16 @@ final class ResponseFactory
             case PaypalWebhookEvent::PAYMENT_CAPTURE_REFUNDED:
             case PaypalWebhookEvent::PAYMENT_CAPTURE_REVERSED:
                 // @todo check if the refund is partial and use PARTIALLY_REFUNDED instead
+                // @todo calculate the refunded value from the payload
                 if ($vaniloStatus->isNoneOf(PaymentStatusProxy::REFUNDED(), PaymentStatusProxy::PARTIALLY_REFUNDED())) {
                     $vaniloStatus = PaymentStatusProxy::REFUNDED();
                 }
                 break;
             case PaypalWebhookEvent::PAYMENT_CAPTURE_COMPLETED:
                 // @todo check the amount and set partial if needed
-                $amountPaid = $order->amount;
-                $transactionId = $order->payments()[0]->id;
-                $captureStatus = PaypalCaptureStatus::COMPLETED();
+                $amountPaid = floatval($request->json('resource.amount.value'));
                 break;
             case PaypalWebhookEvent::PAYMENT_CAPTURE_DECLINED:
-                $captureStatus = PaypalCaptureStatus::DECLINED();
                 break;
         }
 
