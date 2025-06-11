@@ -56,7 +56,7 @@ final class ResponseFactory
             PaypalCaptureStatus::FAILED, PaypalCaptureStatus::DECLINED => PaymentStatusProxy::DECLINED(),
             PaypalCaptureStatus::REFUNDED => PaymentStatusProxy::REFUNDED(),
             PaypalCaptureStatus::PARTIALLY_REFUNDED => PaymentStatusProxy::PARTIALLY_REFUNDED(),
-            PaypalCaptureStatus::COMPLETED() => PaymentStatusProxy::PAID(),
+            PaypalCaptureStatus::COMPLETED => PaymentStatusProxy::PAID(),
         };
 
         $transactionId = null;
