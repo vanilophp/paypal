@@ -122,10 +122,6 @@ final class ResponseFactory
 
     private function makeResponseMessage(StandardizedPaypalResponse $paypalResponse, Order $order): string
     {
-        return sprintf(
-            '%s: %s',
-            ucfirst(strtolower($paypalResponse->source())),
-            $paypalResponse->message() ?? $order->status->label()
-        );
+        return $paypalResponse->message() ?? $order->status->label();
     }
 }
