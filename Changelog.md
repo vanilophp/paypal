@@ -5,8 +5,10 @@
 
 - Added Laravel 12 support
 - Added Vanilo 5 support
+- Added PHP 8.5 support
 - Dropped Vanilo 4 support
 - Dropped PHP 8.2 support
+- Changed the minimum Laravel requirements to 10.48.3, 11.44.1 and 12.2, respectively
 
 ## 2.1.0
 #### 2025-04-01
