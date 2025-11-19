@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use ReflectionClass;
 use Vanilo\Paypal\Client\RealPaypalClient;
 use Vanilo\Paypal\Models\Order;
@@ -27,7 +28,7 @@ class OrderRepositoryTest extends TestCase
     use CreatesDummyPayment;
     use InteractsWithFakeOrderRepository;
 
-    /** @test */
+    #[Test]
     public function the_real_paypal_client_gets_injected_by_the_container()
     {
         $repo = app(OrderRepository::class);
@@ -41,8 +42,7 @@ class OrderRepositoryTest extends TestCase
         $this->assertInstanceOf(RealPaypalClient::class, $apiProperty->getValue($repo));
     }
 
-    /** @test */
-    public function an_order_can_be_created()
+    #[Test] public function an_order_can_be_created()
     {
         $repo = $this->getOrderRepository();
         $payment = $this->createDummyPayment('EUR', 9.11);
@@ -56,8 +56,7 @@ class OrderRepositoryTest extends TestCase
         $this->assertTrue($order->status->equals(PaypalOrderStatus::CREATED()));
     }
 
-    /** @test */
-    public function order_can_be_returned()
+    #[Test] public function order_can_be_returned()
     {
         $repo = $this->getOrderRepository();
         $payment = $this->createDummyPayment('USD', 15);

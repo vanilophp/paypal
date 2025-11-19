@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Tests\Gateway;
 
+use PHPUnit\Framework\Attributes\Test;
 use Vanilo\Payment\Contracts\PaymentGateway;
 use Vanilo\Payment\PaymentGateways;
 use Vanilo\Paypal\PaypalPaymentGateway;
@@ -17,15 +18,13 @@ class RegistrationWithCustomIdTest extends TestCase
         parent::setUp();
     }
 
-    /** @test */
-    public function the_gateway_id_can_be_changed_from_within_the_configuration()
+    #[Test] public function the_gateway_id_can_be_changed_from_within_the_configuration()
     {
         $this->assertCount(2, PaymentGateways::ids());
         $this->assertContains('yesipay', PaymentGateways::ids());
     }
 
-    /** @test */
-    public function the_gateway_can_be_instantiated()
+    #[Test] public function the_gateway_can_be_instantiated()
     {
         $payPalGateway = PaymentGateways::make('yesipay');
 

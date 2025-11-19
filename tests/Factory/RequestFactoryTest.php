@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vanilo\Paypal\Tests\Factory;
 
+use PHPUnit\Framework\Attributes\Test;
 use Vanilo\Payment\Factories\PaymentFactory;
 use Vanilo\Payment\Models\PaymentMethod;
 use Vanilo\Paypal\Factories\RequestFactory;
@@ -31,8 +32,7 @@ class RequestFactoryTest extends TestCase
         ]);
     }
 
-    /** @test */
-    public function it_creates_a_request_object()
+    #[Test] public function it_creates_a_request_object()
     {
         $factory = new RequestFactory($this->getOrderRepository());
         $order = Order::create(['currency' => 'USD', 'amount' => 13.99]);
