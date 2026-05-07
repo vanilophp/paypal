@@ -1,7 +1,7 @@
 # Vanilo Paypal Module Changelog
 
-## Unreleased
-#### 2025-XX-YY
+## 3.0.0
+#### 2026-05-07
 
 - Changed the internal implementation to rely on the PayPal Server SDK
 - Added Laravel 12 & 13 support
