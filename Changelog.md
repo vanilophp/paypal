@@ -3,12 +3,13 @@
 ## Unreleased
 #### 2025-XX-YY
 
+- Changed the internal implementation to rely on the PayPal Server SDK
 - Added Laravel 12 & 13 support
 - Added Vanilo 5 support
 - Added PHP 8.5 support
 - Dropped Vanilo 4 support
 - Dropped PHP 8.2 support
-- Changed the minimum Laravel requirements to 10.48.3, 11.44.1 and 12.2, respectively
+- Changed the minimum Laravel requirements to 10.48.3, 11.46.2 and 12.50, respectively
 
 ## 2.1.0
 #### 2025-04-01
