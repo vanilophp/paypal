@@ -3,7 +3,7 @@
 ## Unreleased
 #### 2025-XX-YY
 
-- Added Laravel 12 support
+- Added Laravel 12 & 13 support
 - Added Vanilo 5 support
 - Added PHP 8.5 support
 - Dropped Vanilo 4 support
