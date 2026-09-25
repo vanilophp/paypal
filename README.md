@@ -9,12 +9,11 @@
 This library enables [PayPal](https://developer.paypal.com/docs/business/checkout/server-side-api-calls/)
 for [Vanilo Payments](https://vanilo.io/docs/master/payments).
 
-Being a [Concord Module](https://konekt.dev/concord/1.x/modules) it is intended to be used by
-Laravel Applications.
+Being a [Concord Module](https://konekt.dev/concord/1.x/modules) it is intended to be used by Laravel Applications.
 
 ## Documentation
 
-Refer to the markdown files in the [docs](docs/) folder.
+Refer to the Markdown files in the [docs](docs/) folder.
 
 ## To-do
 
