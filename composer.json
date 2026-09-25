@@ -26,7 +26,7 @@
         "ext-openssl": "*",
         "ext-simplexml": "*",
         "konekt/concord": "^1.18",
-        "laravel/framework": "^12.50|^13.0",
+        "laravel/framework": "^12.61.1|^13.12",
         "vanilo/payment": "^6.0",
         "vanilo/contracts": "^6.0",
         "paypal/paypal-server-sdk": "^1.0"
